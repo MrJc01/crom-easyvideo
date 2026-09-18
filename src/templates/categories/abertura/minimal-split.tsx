@@ -31,7 +31,7 @@ export const minimalSplitTemplate: TemplateDefinition = {
           <span className="text-xs font-mono text-cyan-400 tracking-widest uppercase">
             {props.category}
           </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white mt-4 leading-tight">
+          <h2 className="text-5xl font-extrabold text-white mt-4 leading-tight">
             {props.leftTitle}
           </h2>
         </div>

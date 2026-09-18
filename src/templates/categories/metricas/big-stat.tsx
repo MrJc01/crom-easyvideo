@@ -23,7 +23,7 @@ export const bigStatTemplate: TemplateDefinition = {
     return (
       <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center p-14 text-center">
         <div style={{ transform: `scale(${s})`, opacity: s }}>
-          <div className="text-7xl md:text-8xl font-black bg-gradient-to-r from-indigo-400 to-pink-500 bg-clip-text text-transparent mb-2">
+          <div className="text-8xl font-black bg-gradient-to-r from-indigo-400 to-pink-500 bg-clip-text text-transparent mb-2">
             {props.percentage}
           </div>
           <h3 className="text-2xl font-bold text-white">{props.label}</h3>

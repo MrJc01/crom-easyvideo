@@ -24,7 +24,7 @@ export const keyTakeawaysTemplate: TemplateDefinition = {
           <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-xs font-mono font-bold uppercase mb-6 inline-block">
             {props.badge}
           </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white leading-relaxed">
+          <h2 className="text-4xl font-extrabold text-white leading-relaxed">
             {props.takeaway}
           </h2>
         </div>

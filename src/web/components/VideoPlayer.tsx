@@ -3,58 +3,15 @@ import type { ProjectState, CalculatedCard } from '../../core/types';
 import { Icons } from '../../core/icons';
 import { CARD_REGISTRY } from '../../templates/registry';
 import { VideoComposition } from '../../remotion/VideoComposition';
+import {
+  type ResolutionPreset,
+  RESOLUTION_PRESETS,
+  DEFAULT_RESOLUTION_PRESET,
+  calculateCanonicalScale,
+} from '../../core/resolutions';
 
-export interface ResolutionPreset {
-  id: string;
-  label: string;
-  sublabel: string;
-  width: number;
-  height: number;
-  aspectRatio: string;
-}
-
-export const RESOLUTION_PRESETS: ResolutionPreset[] = [
-  {
-    id: '16-9-1080',
-    label: '16:9 Widescreen Full HD',
-    sublabel: '1920 × 1080 (YouTube, Desktop)',
-    width: 1920,
-    height: 1080,
-    aspectRatio: '16 / 9',
-  },
-  {
-    id: '16-9-720',
-    label: '16:9 Widescreen HD',
-    sublabel: '1280 × 720 (YouTube, Rápido)',
-    width: 1280,
-    height: 720,
-    aspectRatio: '16 / 9',
-  },
-  {
-    id: '9-16-1080',
-    label: '9:16 Vertical Story / Reels',
-    sublabel: '1080 × 1920 (TikTok, Shorts, Reels)',
-    width: 1080,
-    height: 1920,
-    aspectRatio: '9 / 16',
-  },
-  {
-    id: '1-1-1080',
-    label: '1:1 Quadrado',
-    sublabel: '1080 × 1080 (Instagram, LinkedIn)',
-    width: 1080,
-    height: 1080,
-    aspectRatio: '1 / 1',
-  },
-  {
-    id: '4-5-1080',
-    label: '4:5 Retrato Feed',
-    sublabel: '1080 × 1350 (Instagram Feed)',
-    width: 1080,
-    height: 1350,
-    aspectRatio: '4 / 5',
-  },
-];
+export type { ResolutionPreset };
+export { RESOLUTION_PRESETS };
 
 export interface VideoPlayerProps {
   project: ProjectState;
@@ -105,14 +62,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       const parentHeight = el.clientHeight;
       if (parentWidth === 0 || parentHeight === 0) return;
 
-      const padding = 20;
-      const availW = Math.max(50, parentWidth - padding);
-      const availH = Math.max(50, parentHeight - padding);
+      const calculatedScale = calculateCanonicalScale(
+        parentWidth,
+        parentHeight,
+        selectedPreset.canonicalWidth,
+        selectedPreset.canonicalHeight,
+        20,
+        0.95
+      );
 
-      const calculatedScale =
-        Math.min(availW / selectedPreset.width, availH / selectedPreset.height) * 0.95;
-
-      setScale(Math.max(0.08, calculatedScale));
+      setScale(calculatedScale);
     };
 
     updateScale();
@@ -124,7 +83,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       observer.disconnect();
       window.removeEventListener('resize', updateScale);
     };
-  }, [selectedPreset.width, selectedPreset.height]);
+  }, [selectedPreset.canonicalWidth, selectedPreset.canonicalHeight]);
 
   const localFrame = useMemo(() => {
     if (!activeCard) return 0;
@@ -151,6 +110,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </span>
           <span className="bg-indigo-950/80 text-indigo-300 border border-indigo-800/60 px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono font-bold shrink-0">
             {selectedPreset.width} × {selectedPreset.height}
+          </span>
+          <span className="text-[10px] text-slate-500 font-mono hidden md:inline">
+            (Canvas: {selectedPreset.canonicalWidth}×{selectedPreset.canonicalHeight})
           </span>
         </div>
 
@@ -201,8 +163,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <div
           id="remotion-canvas-stage"
           style={{
-            width: `${selectedPreset.width}px`,
-            height: `${selectedPreset.height}px`,
+            width: `${selectedPreset.canonicalWidth}px`,
+            height: `${selectedPreset.canonicalHeight}px`,
             transform: `scale(${scale})`,
             transformOrigin: 'center center',
             flexShrink: 0,

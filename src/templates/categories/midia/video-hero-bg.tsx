@@ -41,11 +41,11 @@ export const videoHeroBgTemplate: TemplateDefinition = {
           style={{ opacity: (props.overlayOpacity || 60) / 100 }}
         />
         <div className="relative z-20 max-w-4xl" style={{ transform: `scale(${s})`, opacity: s }}>
-          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-lg">
+          <h1 className="text-5xl font-black text-white tracking-tight leading-tight drop-shadow-lg">
             {props.title}
           </h1>
           {props.showSubtitle && (
-            <p className="text-base md:text-lg text-slate-200 mt-4 max-w-2xl mx-auto leading-relaxed drop-shadow">
+            <p className="text-lg text-slate-200 mt-4 max-w-2xl mx-auto leading-relaxed drop-shadow">
               {props.subtitle}
             </p>
           )}

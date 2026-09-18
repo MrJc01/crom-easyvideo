@@ -26,7 +26,7 @@ export const quoteStatementTemplate: TemplateDefinition = {
           className="max-w-3xl border-l-4 border-indigo-500 pl-8"
           style={{ transform: `translateX(${(1 - s) * -20}px)`, opacity: s }}
         >
-          <p className="text-3xl md:text-4xl font-serif italic text-white leading-snug">{props.quote}</p>
+          <p className="text-4xl font-serif italic text-white leading-snug">{props.quote}</p>
           <div className="mt-6">
             <h4 className="text-base font-bold text-indigo-400 font-mono">{props.author}</h4>
             <span className="text-xs text-slate-500 font-mono">{props.year}</span>

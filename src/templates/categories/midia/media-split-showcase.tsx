@@ -53,7 +53,7 @@ export const mediaSplitShowcaseTemplate: TemplateDefinition = {
               {props.badge}
             </span>
           )}
-          <h2 className="text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight">
+          <h2 className="text-5xl font-extrabold text-white mb-6 leading-tight">
             {props.title}
           </h2>
           <div className="space-y-3">
@@ -62,10 +62,10 @@ export const mediaSplitShowcaseTemplate: TemplateDefinition = {
               return (
                 <div
                   key={i}
-                  className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] sm:text-xs text-slate-200"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200"
                   style={{ transform: `translateX(${(1 - bS) * 20}px)`, opacity: bS }}
                 >
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-md bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+                  <div className="w-5 h-5 rounded-md bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
                     <Icons.Check />
                   </div>
                   <span>{b}</span>
@@ -74,8 +74,8 @@ export const mediaSplitShowcaseTemplate: TemplateDefinition = {
             })}
           </div>
         </div>
-        <div className="md:col-span-6 h-full flex items-center justify-center">
-          <div className="w-full h-[180px] sm:h-[280px] md:h-[360px] shadow-2xl rounded-2xl overflow-hidden border border-slate-800">
+        <div className="col-span-6 h-full flex items-center justify-center">
+          <div className="w-full h-[360px] shadow-2xl rounded-2xl overflow-hidden border border-slate-800">
             <MediaRenderer media={props.media} frame={frame} fps={fps} />
           </div>
         </div>

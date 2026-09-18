@@ -30,7 +30,7 @@ export const questionDilemmaTemplate: TemplateDefinition = {
               <Icons.Sparkles />
             </div>
           )}
-          <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-6">
+          <h2 className="text-5xl font-black text-white leading-tight mb-6">
             {props.question}
           </h2>
           <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">{props.context}</p>

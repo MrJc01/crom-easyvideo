@@ -4,6 +4,12 @@ import type { TemplateDefinition, TemplateRenderProps } from '../../core/types';
 import { CARD_REGISTRY, registerTemplate } from '../../templates/registry';
 import { spring, interpolate } from '../../core/animations';
 import { Icons, TemplateIconMap } from '../../core/icons';
+import {
+  type ResolutionPreset,
+  RESOLUTION_PRESETS,
+  DEFAULT_RESOLUTION_PRESET,
+  calculateCanonicalScale,
+} from '../../core/resolutions';
 import { MediaFieldEditor } from './MediaFieldEditor';
 import { DynamicArrayField } from './DynamicArrayField';
 
@@ -171,6 +177,9 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Viewport e escala proporcional
+  const [selectedPreset, setSelectedPreset] = useState<ResolutionPreset>(
+    DEFAULT_RESOLUTION_PRESET
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState<number>(0.4);
 
@@ -191,7 +200,7 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
     }
   }, [activeTemplate?.id]);
 
-  // Escala proporcional não-destrutiva
+  // Escala proporcional não-destrutiva baseada no preset canônico
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -201,12 +210,15 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
       const h = el.clientHeight;
       if (w === 0 || h === 0) return;
 
-      const padding = 24;
-      const availW = Math.max(50, w - padding);
-      const availH = Math.max(50, h - padding);
-
-      const calculatedScale = Math.min(availW / 1920, availH / 1080) * 0.95;
-      setScale(Math.max(0.08, calculatedScale));
+      const calculatedScale = calculateCanonicalScale(
+        w,
+        h,
+        selectedPreset.canonicalWidth,
+        selectedPreset.canonicalHeight,
+        24,
+        0.95
+      );
+      setScale(calculatedScale);
     };
 
     updateScale();
@@ -218,7 +230,7 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
       observer.disconnect();
       window.removeEventListener('resize', updateScale);
     };
-  }, []);
+  }, [selectedPreset.canonicalWidth, selectedPreset.canonicalHeight]);
 
   // Loop de playback local no sandbox
   useEffect(() => {
@@ -473,17 +485,39 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
         {/* Coluna Esquerda: Preview Isolado */}
         <div className="lg:col-span-6 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
           {/* Header do Preview */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-950/90 text-slate-300 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
-              <span className="font-bold text-white uppercase tracking-wider">
-                Preview em Tempo Real (1920 × 1080)
+          <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 border-b border-slate-800 bg-slate-950/90 text-slate-300 text-xs gap-2 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse shrink-0" />
+              <span className="font-bold text-white uppercase tracking-wider truncate">
+                Preview Canônico
+              </span>
+              <span className="bg-indigo-950/80 text-indigo-300 border border-indigo-800/60 px-2 py-0.5 rounded text-[10px] font-mono font-bold shrink-0">
+                {selectedPreset.width} × {selectedPreset.height}
               </span>
             </div>
-            <div className="flex items-center gap-2 font-mono text-xs text-indigo-400">
-              <span>Frame: {localFrame}f / {maxFrames}f</span>
-              <span>•</span>
-              <span>{(localFrame / 30).toFixed(2)}s</span>
+
+            <div className="flex items-center gap-2 ml-auto">
+              <select
+                value={selectedPreset.id}
+                onChange={(e) => {
+                  const found = RESOLUTION_PRESETS.find((p) => p.id === e.target.value);
+                  if (found) setSelectedPreset(found);
+                }}
+                className="bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold rounded-lg px-2.5 py-1 focus:outline-none focus:border-indigo-500 transition cursor-pointer"
+                title="Resolução / Formato de Exibição"
+              >
+                {RESOLUTION_PRESETS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label} ({p.width} × {p.height})
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex items-center gap-1.5 font-mono text-xs text-indigo-400 shrink-0">
+                <span>{localFrame}f</span>
+                <span>•</span>
+                <span>{(localFrame / 30).toFixed(2)}s</span>
+              </div>
             </div>
           </div>
 
@@ -493,9 +527,10 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
             className="w-full bg-black flex items-center justify-center p-4 relative min-h-[300px] sm:min-h-[440px] md:min-h-[500px] max-h-[560px] overflow-hidden select-none"
           >
             <div
+              id="sandbox-canvas-stage"
               style={{
-                width: '1920px',
-                height: '1080px',
+                width: `${selectedPreset.canonicalWidth}px`,
+                height: `${selectedPreset.canonicalHeight}px`,
                 transform: `scale(${scale})`,
                 transformOrigin: 'center center',
                 flexShrink: 0,

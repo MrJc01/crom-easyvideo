@@ -32,7 +32,7 @@ export const glitchCyberTemplate: TemplateDefinition = {
             <span>{props.systemTag}</span>
             {props.showLiveIndicator && <span className="animate-pulse font-bold">ONLINE</span>}
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white tracking-wide">{props.header}</h2>
+          <h2 className="text-4xl font-bold text-white tracking-wide">{props.header}</h2>
           <p className="text-slate-400 mt-4 text-sm font-sans">{props.subtext}</p>
         </div>
       </div>

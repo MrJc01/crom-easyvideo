@@ -36,7 +36,7 @@ export const bigHeadlineTemplate: TemplateDefinition = {
           </span>
         )}
         <h1
-          className="text-6xl md:text-7xl font-black text-white tracking-tighter uppercase leading-none max-w-4xl"
+          className="text-7xl font-black text-white tracking-tighter uppercase leading-none max-w-4xl"
           style={{ transform: `scale(${s})`, opacity: s }}
         >
           {props.headline}

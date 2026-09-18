@@ -29,7 +29,7 @@ export const podcastIntroTemplate: TemplateDefinition = {
           <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono text-xs font-bold uppercase">
             {props.episode}
           </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mt-6 mb-6 leading-tight">
+          <h2 className="text-4xl font-extrabold text-white mt-6 mb-6 leading-tight">
             {props.topic}
           </h2>
           <span className="text-xs font-mono text-slate-400 tracking-wider uppercase">

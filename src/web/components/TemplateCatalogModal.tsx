@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Icons, TemplateIconMap } from '../../core/icons';
 import { CARD_REGISTRY, TEMPLATE_CATEGORIES } from '../../templates/registry';
 
@@ -21,6 +21,9 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
   const [isAnimatingPreview, setIsAnimatingPreview] = useState<boolean>(true);
   const [mobileTab, setMobileTab] = useState<'list' | 'preview'>('list');
 
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState<number>(0.2);
+
   const categories = TEMPLATE_CATEGORIES;
 
   const templateList = useMemo(() => Object.values(CARD_REGISTRY), []);
@@ -38,6 +41,25 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
     }, 1000 / 30);
     return () => clearInterval(interval);
   }, [isOpen, isAnimatingPreview]);
+
+  // Monitora a largura do container de preview para calcular a escala exata do palco 1920x1080
+  useEffect(() => {
+    if (!isOpen) return;
+    const el = previewContainerRef.current;
+    if (!el) return;
+
+    const updateScale = () => {
+      const w = el.clientWidth;
+      if (w > 0) {
+        setPreviewScale(w / 1920);
+      }
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isOpen, previewTemplateId]);
 
   if (!isOpen) return null;
 
@@ -181,16 +203,34 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
                 <span className="text-xs font-bold text-white">Preview Animado ao Vivo</span>
               </div>
               <button
+                type="button"
                 onClick={() => setIsAnimatingPreview(!isAnimatingPreview)}
-                className="text-[10px] sm:text-[11px] text-indigo-400 hover:text-indigo-300 font-mono"
+                className="text-[10px] sm:text-[11px] text-indigo-400 hover:text-indigo-300 font-mono flex items-center gap-1.5"
               >
-                {isAnimatingPreview ? '⏸ Pausar Loop' : '▶ Reproduzir Loop'}
+                {isAnimatingPreview ? <Icons.Pause /> : <Icons.Play />}
+                <span>{isAnimatingPreview ? 'Pausar Loop' : 'Reproduzir Loop'}</span>
               </button>
             </div>
 
-            <div className="w-full aspect-video bg-black rounded-xl border border-slate-800 overflow-hidden relative shadow-inner flex items-center justify-center">
+            <div
+              ref={previewContainerRef}
+              className="w-full aspect-video bg-black rounded-xl border border-slate-800 overflow-hidden relative shadow-inner flex items-center justify-center select-none"
+            >
               {activePreviewDef?.Component && (
-                <div className="w-full h-full transform scale-75 origin-center">
+                <div
+                  id="modal-virtual-canvas-stage"
+                  style={{
+                    width: '1920px',
+                    height: '1080px',
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: 'center center',
+                    flexShrink: 0,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    pointerEvents: 'none',
+                    backgroundColor: '#030712',
+                  }}
+                >
                   <activePreviewDef.Component
                     props={activePreviewDef.defaultProps}
                     frame={previewFrame}
