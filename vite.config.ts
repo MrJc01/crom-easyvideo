@@ -120,74 +120,79 @@ function synthesizeWithCromyvoice(text: string, voice = 'pt-BR-AntonioNeural'): 
 const ttsCache = new Map<string, Buffer>();
 
 function ttsApiPlugin(): Plugin {
+  const handler = async (req: any, res: any, next: any) => {
+    if (req.url && req.url.startsWith('/api/tts')) {
+      try {
+        const urlObj = new URL(req.url, 'http://localhost');
+        const text = urlObj.searchParams.get('text') || '';
+        const lang = urlObj.searchParams.get('lang') || 'pt-BR';
+        const voice = urlObj.searchParams.get('voice') || urlObj.searchParams.get('voiceId') || 'pt-BR-AntonioNeural';
+
+        if (!text.trim()) {
+          res.statusCode = 400;
+          res.end('Missing text parameter');
+          return;
+        }
+
+        const cacheKey = `${voice}:${lang}:${text}`;
+        if (ttsCache.has(cacheKey)) {
+          const cached = ttsCache.get(cacheKey)!;
+          res.setHeader('Content-Type', 'audio/mpeg');
+          res.setHeader('Content-Length', cached.length);
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          res.end(cached);
+          return;
+        }
+
+        // 1. Prioridade: Binário Local CromyVoice (Edge-TTS Neural)
+        const cromyBuffer = synthesizeWithCromyvoice(text.trim(), voice);
+        if (cromyBuffer && cromyBuffer.length > 0) {
+          ttsCache.set(cacheKey, cromyBuffer);
+          res.setHeader('Content-Type', 'audio/mpeg');
+          res.setHeader('Content-Length', cromyBuffer.length);
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          res.end(cromyBuffer);
+          return;
+        }
+
+        // 2. Fallback: Google TTS
+        const chunks = chunkText(text.trim(), 140);
+        const buffers: Buffer[] = [];
+
+        for (const c of chunks) {
+          if (!c.trim()) continue;
+          try {
+            const buf = await fetchGoogleTtsChunk(c.trim(), lang);
+            buffers.push(buf);
+          } catch {
+            const estSec = Math.max(0.4, c.trim().split(/\s+/).length * 0.3);
+            buffers.push(generateBeepWav(estSec, 440));
+          }
+        }
+
+        const finalBuffer = Buffer.concat(buffers);
+        ttsCache.set(cacheKey, finalBuffer);
+
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Content-Length', finalBuffer.length);
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.end(finalBuffer);
+      } catch (err: any) {
+        res.statusCode = 500;
+        res.end(err.message || 'TTS synthesis failed');
+      }
+      return;
+    }
+    next();
+  };
+
   return {
     name: 'crom-tts-api',
     configureServer(server) {
-      server.middlewares.use(async (req, res, next) => {
-        if (req.url && req.url.startsWith('/api/tts')) {
-          try {
-            const urlObj = new URL(req.url, 'http://localhost');
-            const text = urlObj.searchParams.get('text') || '';
-            const lang = urlObj.searchParams.get('lang') || 'pt-BR';
-            const voice = urlObj.searchParams.get('voice') || urlObj.searchParams.get('voiceId') || 'pt-BR-AntonioNeural';
-
-            if (!text.trim()) {
-              res.statusCode = 400;
-              res.end('Missing text parameter');
-              return;
-            }
-
-            const cacheKey = `${voice}:${lang}:${text}`;
-            if (ttsCache.has(cacheKey)) {
-              const cached = ttsCache.get(cacheKey)!;
-              res.setHeader('Content-Type', 'audio/mpeg');
-              res.setHeader('Content-Length', cached.length);
-              res.setHeader('Cache-Control', 'public, max-age=86400');
-              res.end(cached);
-              return;
-            }
-
-            // 1. Prioridade: Binário Local CromyVoice (Edge-TTS Neural)
-            const cromyBuffer = synthesizeWithCromyvoice(text.trim(), voice);
-            if (cromyBuffer && cromyBuffer.length > 0) {
-              ttsCache.set(cacheKey, cromyBuffer);
-              res.setHeader('Content-Type', 'audio/mpeg');
-              res.setHeader('Content-Length', cromyBuffer.length);
-              res.setHeader('Cache-Control', 'public, max-age=86400');
-              res.end(cromyBuffer);
-              return;
-            }
-
-            // 2. Fallback: Google TTS
-            const chunks = chunkText(text.trim(), 140);
-            const buffers: Buffer[] = [];
-
-            for (const c of chunks) {
-              if (!c.trim()) continue;
-              try {
-                const buf = await fetchGoogleTtsChunk(c.trim(), lang);
-                buffers.push(buf);
-              } catch {
-                const estSec = Math.max(0.4, c.trim().split(/\s+/).length * 0.3);
-                buffers.push(generateBeepWav(estSec, 440));
-              }
-            }
-
-            const finalBuffer = Buffer.concat(buffers);
-            ttsCache.set(cacheKey, finalBuffer);
-
-            res.setHeader('Content-Type', 'audio/mpeg');
-            res.setHeader('Content-Length', finalBuffer.length);
-            res.setHeader('Cache-Control', 'public, max-age=86400');
-            res.end(finalBuffer);
-          } catch (err: any) {
-            res.statusCode = 500;
-            res.end(err.message || 'TTS synthesis failed');
-          }
-          return;
-        }
-        next();
-      });
+      server.middlewares.use(handler);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(handler);
     },
   };
 }
@@ -197,12 +202,12 @@ export default defineConfig({
 
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: Number(process.env.PORT) || 5174,
     strictPort: false,
   },
   preview: {
     host: '0.0.0.0',
-    port: 5173,
+    port: Number(process.env.PORT) || 5174,
   },
 });
 

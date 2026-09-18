@@ -25,6 +25,9 @@ import { glossaryTermTemplate } from './categories/conceitos/glossary-term';
 import { stepGuideModularTemplate } from './categories/conceitos/step-guide-modular';
 
 // Categoria 4: Arquitetura & IA (6 templates)
+import { dpoVsRlhfTemplate } from './categories/arquitetura/dpo-vs-rlhf';
+import { dataCurationPipelineTemplate } from './categories/arquitetura/data-curation-pipeline';
+import { llmPipelineFlowTemplate } from './categories/arquitetura/llm-pipeline-flow';
 import { tokensEmbeddingsTemplate } from './categories/arquitetura/tokens-embeddings';
 import { attentionTransformerTemplate } from './categories/arquitetura/attention-transformer';
 import { codeSnippetTemplate } from './categories/arquitetura/code-snippet';
@@ -34,6 +37,7 @@ import { systemArchitectureTemplate } from './categories/arquitetura/system-arch
 import { deepDiveArchitectureTemplate } from './categories/arquitetura/deep-dive-architecture';
 
 // Categoria 5: Dados, Métricas & Encerramento (7 templates)
+import { scalingLawsChartTemplate } from './categories/metricas/scaling-laws-chart';
 import { comparativeMetricsTemplate } from './categories/metricas/comparative-metrics';
 import { versusBattleTemplate } from './categories/metricas/versus-battle';
 import { prosConsModularTemplate } from './categories/metricas/pros-cons-modular';
@@ -77,6 +81,10 @@ export const TEMPLATE_CATEGORIES = [
 
 // Registro dos 30 templates
 const ALL_TEMPLATES: TemplateDefinition[] = [
+  dpoVsRlhfTemplate,
+  dataCurationPipelineTemplate,
+  scalingLawsChartTemplate,
+  llmPipelineFlowTemplate,
   // Abertura & Título
   heroTitleTemplate,
   bigHeadlineTemplate,
