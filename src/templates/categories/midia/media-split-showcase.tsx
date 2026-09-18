@@ -46,26 +46,26 @@ export const mediaSplitShowcaseTemplate: TemplateDefinition = {
     const s = spring({ frame: frame - 2, fps });
     const bullets = Array.isArray(props.bullets) ? props.bullets : [];
     return (
-      <div className="w-full h-full bg-slate-950 grid grid-cols-12 p-10 gap-8 items-center">
-        <div className="col-span-6 h-full flex flex-col justify-center" style={{ opacity: s }}>
+      <div className="w-full h-full bg-slate-950 grid grid-cols-1 md:grid-cols-12 p-4 sm:p-10 gap-4 sm:gap-8 items-center overflow-y-auto">
+        <div className="md:col-span-6 h-full flex flex-col justify-center" style={{ opacity: s }}>
           {props.showBadge && (
-            <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-mono font-bold uppercase w-max mb-3">
+            <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[10px] sm:text-xs font-mono font-bold uppercase w-max mb-2 sm:mb-3">
               {props.badge}
             </span>
           )}
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-6 leading-tight">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white mb-3 sm:mb-6 leading-tight">
             {props.title}
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {bullets.map((b: string, i: number) => {
               const bS = spring({ frame: frame - 8 - i * 4, fps });
               return (
                 <div
                   key={i}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200"
+                  className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] sm:text-xs text-slate-200"
                   style={{ transform: `translateX(${(1 - bS) * 20}px)`, opacity: bS }}
                 >
-                  <div className="w-5 h-5 rounded-md bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-md bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
                     <Icons.Check />
                   </div>
                   <span>{b}</span>
@@ -74,8 +74,8 @@ export const mediaSplitShowcaseTemplate: TemplateDefinition = {
             })}
           </div>
         </div>
-        <div className="col-span-6 h-full flex items-center justify-center">
-          <div className="w-full h-[360px] shadow-2xl rounded-2xl overflow-hidden border border-slate-800">
+        <div className="md:col-span-6 h-full flex items-center justify-center">
+          <div className="w-full h-[180px] sm:h-[280px] md:h-[360px] shadow-2xl rounded-2xl overflow-hidden border border-slate-800">
             <MediaRenderer media={props.media} frame={frame} fps={fps} />
           </div>
         </div>

@@ -82,63 +82,64 @@ export const JsonModal: React.FC<JsonModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full p-6 shadow-2xl flex flex-col max-h-[85vh]">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-          <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl flex flex-col max-h-[88vh]">
+        <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800">
+          <div className="min-w-0 pr-2">
+            <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 truncate">
               <Icons.Download />
-              <span>Importar / Exportar Projeto (JSON)</span>
+              <span>Importar / Exportar JSON</span>
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-[11px] sm:text-xs text-slate-400 truncate">
               Copie o código JSON ou faça upload de um arquivo para restaurar seu projeto.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm"
+            aria-label="Fechar"
+            className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm shrink-0"
           >
             <Icons.Close />
           </button>
         </div>
 
         {errorMsg && (
-          <div className="my-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
+          <div className="my-2 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
             {errorMsg}
           </div>
         )}
 
-        <div className="flex-1 py-4">
+        <div className="flex-1 py-3 overflow-hidden">
           <textarea
-            rows={13}
+            rows={10}
             value={jsonText}
             onChange={(e) => {
               setJsonText(e.target.value);
               setErrorMsg(null);
             }}
-            className="w-full h-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full h-full min-h-[160px] bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-indigo-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
           />
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-slate-800 gap-2.5 sm:gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             <button
               onClick={handleCopy}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
             >
               <Icons.Copy />
               <span>{copied ? 'Copiado!' : 'Copiar'}</span>
             </button>
             <button
               onClick={handleDownload}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
             >
               <Icons.Download />
               <span>Baixar .json</span>
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition"
             >
               <Icons.Upload />
               <span>Subir Arquivo</span>
@@ -154,7 +155,7 @@ export const JsonModal: React.FC<JsonModalProps> = ({
 
           <button
             onClick={handleValidateAndImport}
-            className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/30"
+            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/30"
           >
             Importar e Aplicar
           </button>

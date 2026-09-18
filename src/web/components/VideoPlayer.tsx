@@ -44,59 +44,59 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div className="flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
       {/* Player Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800 bg-slate-950/80 text-slate-300">
-        <div className="flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-            Remotion Player Preview
+      <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b border-slate-800 bg-slate-950/80 text-slate-300 gap-2 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="text-[11px] sm:text-xs font-semibold text-slate-300 uppercase tracking-wider truncate">
+            Player Preview
           </span>
-          <span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-xs font-mono font-bold">
+          <span className="bg-slate-800 text-slate-300 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono font-bold">
             {project.meta.fps} FPS
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 ml-auto">
           <div className="flex bg-slate-800 rounded-lg p-0.5 text-xs font-medium">
             <button
               onClick={() => setAspectRatio('16:9')}
-              className={`px-2.5 py-1 rounded-md transition ${
-                aspectRatio === '16:9' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+              className={`px-2 sm:px-2.5 py-1 rounded-md transition text-xs ${
+                aspectRatio === '16:9' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'
               }`}
             >
               16:9
             </button>
             <button
               onClick={() => setAspectRatio('9:16')}
-              className={`px-2.5 py-1 rounded-md transition ${
-                aspectRatio === '9:16' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+              className={`px-2 sm:px-2.5 py-1 rounded-md transition text-xs ${
+                aspectRatio === '9:16' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'
               }`}
             >
               9:16
             </button>
             <button
               onClick={() => setAspectRatio('1:1')}
-              className={`px-2.5 py-1 rounded-md transition ${
-                aspectRatio === '1:1' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+              className={`px-2 sm:px-2.5 py-1 rounded-md transition text-xs ${
+                aspectRatio === '1:1' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'
               }`}
             >
               1:1
             </button>
           </div>
-          <span className="font-mono text-xs text-indigo-400 bg-indigo-950/60 border border-indigo-900/60 px-2.5 py-1 rounded-md">
+          <span className="font-mono text-xs text-indigo-400 bg-indigo-950/60 border border-indigo-900/60 px-2 py-1 rounded-md">
             {timecode}
           </span>
         </div>
       </div>
 
       {/* Video Viewport */}
-      <div className="w-full bg-black flex items-center justify-center p-4 relative min-h-[360px] md:min-h-[460px] max-h-[540px] overflow-hidden">
+      <div className="w-full bg-black flex items-center justify-center p-2 sm:p-4 relative min-h-[240px] sm:min-h-[360px] md:min-h-[460px] max-h-[540px] overflow-hidden">
         <div
           className={`relative shadow-2xl overflow-hidden transition-all duration-300 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center ${
             aspectRatio === '16:9'
               ? 'aspect-video w-full max-w-4xl'
               : aspectRatio === '9:16'
-              ? 'aspect-[9/16] h-[480px]'
-              : 'aspect-square h-[440px]'
+              ? 'aspect-[9/16] h-[340px] sm:h-[480px]'
+              : 'aspect-square h-[280px] sm:h-[440px]'
           }`}
         >
           <VideoComposition
@@ -106,9 +106,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           />
 
           {activeCard && (
-            <div className="absolute top-4 left-4 z-30 bg-slate-900/80 backdrop-blur-md border border-slate-700/60 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-2 font-mono pointer-events-none">
-              <span className="text-indigo-400 font-bold">Cena {activeCard.order + 1}:</span>
-              <span>{CARD_REGISTRY[activeCard.templateId]?.name || 'Template'}</span>
+            <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 z-30 bg-slate-900/85 backdrop-blur-md border border-slate-700/60 text-slate-300 text-[10px] sm:text-xs px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg flex items-center gap-1.5 sm:gap-2 font-mono pointer-events-none">
+              <span className="text-indigo-400 font-bold">#{activeCard.order + 1}:</span>
+              <span className="truncate max-w-[120px] sm:max-w-[200px]">
+                {CARD_REGISTRY[activeCard.templateId]?.name || 'Template'}
+              </span>
               <span className="text-slate-500">
                 ({localFrame}f / {activeCard.durationInFrames}f)
               </span>
@@ -118,7 +120,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       </div>
 
       {/* Transport & Scrubber */}
-      <div className="p-4 bg-slate-950 border-t border-slate-800 flex flex-col gap-3">
+      <div className="p-3 sm:p-4 bg-slate-950 border-t border-slate-800 flex flex-col gap-2.5 sm:gap-3">
         <div className="relative w-full">
           <input
             type="range"
@@ -144,25 +146,25 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1 sm:gap-2">
             <button
               onClick={() => onFrameChange(0)}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
               title="Voltar ao início"
             >
               <Icons.SkipBack />
             </button>
             <button
               onClick={() => onFrameChange(Math.max(0, currentFrame - project.meta.fps))}
-              className="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition text-xs font-mono"
-              title="-1s"
+              className="px-1.5 sm:px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition text-[11px] sm:text-xs font-mono"
+              title="-1 segundo"
             >
               -1s
             </button>
             <button
               onClick={onTogglePlay}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition transform active:scale-95"
+              className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2 shadow-lg shadow-indigo-600/30 transition transform active:scale-95"
             >
               {isPlaying ? <Icons.Pause /> : <Icons.Play />}
               <span>{isPlaying ? 'Pausar' : 'Reproduzir'}</span>
@@ -171,23 +173,23 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
               onClick={() =>
                 onFrameChange(Math.min(totalFrames - 1, currentFrame + project.meta.fps))
               }
-              className="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition text-xs font-mono"
-              title="+1s"
+              className="px-1.5 sm:px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition text-[11px] sm:text-xs font-mono"
+              title="+1 segundo"
             >
               +1s
             </button>
             <button
               onClick={() => onFrameChange(totalFrames - 1)}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
               title="Ir para o final"
             >
               <Icons.SkipForward />
             </button>
           </div>
 
-          <div className="text-xs text-slate-400 font-mono">
+          <div className="text-[11px] sm:text-xs text-slate-400 font-mono ml-auto">
             Frame: <span className="text-white font-bold">{currentFrame}</span> / {totalFrames} (
-            {(totalFrames / project.meta.fps).toFixed(1)}s total)
+            {(totalFrames / project.meta.fps).toFixed(1)}s)
           </div>
         </div>
       </div>

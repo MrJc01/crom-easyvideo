@@ -29,39 +29,39 @@ export const tokensEmbeddingsTemplate: TemplateDefinition = {
     const s = spring({ frame, fps });
     const tokens = (props.tokens || '').split(';').filter(Boolean);
     return (
-      <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center p-10 text-center">
+      <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center p-4 sm:p-10 text-center overflow-y-auto">
         <div className="max-w-4xl w-full" style={{ opacity: s }}>
-          <span className="text-xs font-mono text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+          <span className="text-[10px] sm:text-xs font-mono text-emerald-400 uppercase tracking-wider bg-emerald-500/10 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full border border-emerald-500/30">
             TOKENIZAÇÃO & VETORES
           </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mt-3 mb-6">{props.title}</h2>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 font-mono text-sm text-slate-400 mb-6 inline-block">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white mt-2 sm:mt-3 mb-3 sm:mb-6">{props.title}</h2>
+          <div className="bg-slate-900 border border-slate-800 rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 font-mono text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6 inline-block max-w-full truncate">
             Input: "{props.sentence}"
           </div>
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
+          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-4 sm:mb-8 max-h-[160px] overflow-y-auto">
             {tokens.map((t: string, i: number) => {
               const tokS = spring({ frame: frame - 8 - i * 3, fps });
               const isHighlight = Math.floor(frame / 20) % tokens.length === i;
               return (
                 <div
                   key={i}
-                  className={`px-3 py-2 rounded-xl font-mono text-sm border transition-all ${
+                  className={`px-2 sm:px-3 py-1 sm:py-2 rounded-lg sm:rounded-xl font-mono text-xs sm:text-sm border transition-all ${
                     isHighlight
                       ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 scale-105 shadow-lg'
                       : 'bg-slate-900 border-slate-800 text-slate-300'
                   }`}
                   style={{ transform: `scale(${tokS})`, opacity: tokS }}
                 >
-                  <span className="text-[10px] text-slate-500 mr-1">#{i}</span>
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 mr-1">#{i}</span>
                   {t}
                 </div>
               );
             })}
           </div>
           {props.showDimensions && (
-            <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 font-mono text-xs text-slate-300 flex items-center justify-between">
-              <span className="text-emerald-400 font-bold">Vetor [1536d]:</span>
-              <span className="text-slate-400">[0.842, -0.312, 0.915, ... 1533 dimensões restantes]</span>
+            <div className="bg-slate-900/90 border border-slate-800 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 font-mono text-[10px] sm:text-xs text-slate-300 flex items-center justify-between gap-2">
+              <span className="text-emerald-400 font-bold shrink-0">Vetor [1536d]:</span>
+              <span className="text-slate-400 truncate">[0.842, -0.312, 0.915, ... 1533 dimensões]</span>
             </div>
           )}
         </div>
