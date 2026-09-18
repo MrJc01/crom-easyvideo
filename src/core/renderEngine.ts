@@ -461,18 +461,50 @@ export async function renderProjectToVideo(
   // 3. Capturar stream do Canvas
   const stream = canvas.captureStream(fps);
 
-  // 4. Adicionar faixa de áudio se solicitado
+  // 4. Adicionar faixa de áudio e narrações se solicitado
   let audioContext: AudioContext | null = null;
+  const audioSourcesToSchedule: Array<{ buffer: AudioBuffer; startSec: number }> = [];
+
   if (options.includeAudio && typeof window.AudioContext !== 'undefined') {
     try {
-      audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      audioContext = new AudioCtx();
       const dest = audioContext.createMediaStreamDestination();
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      gain.gain.value = 0.0001;
-      osc.connect(gain);
-      gain.connect(dest);
-      osc.start();
+      (audioContext as any).__mediaDest = dest;
+
+      // Pré-carrega buffers de áudio para cada cena configurada
+      for (let i = 0; i < calculatedCards.length; i++) {
+        const c = calculatedCards[i];
+        const script = (c.audio && 'script' in c.audio && c.audio.script) || c.tts?.script;
+        const voiceId = (c.audio && 'voiceId' in c.audio && c.audio.voiceId) || c.tts?.voiceId || 'pt-BR-Antonio';
+        const lang = voiceId.startsWith('en') ? 'en-US' : voiceId.startsWith('es') ? 'es-ES' : 'pt-BR';
+        let audioUrl: string | null =
+          c.audio && 'audioUrl' in c.audio && typeof c.audio.audioUrl === 'string'
+            ? c.audio.audioUrl
+            : null;
+
+        if (!audioUrl && script) {
+          audioUrl = `/api/tts?text=${encodeURIComponent(script)}&lang=${lang}`;
+        }
+
+        if (audioUrl) {
+
+          try {
+            const resp = await fetch(audioUrl);
+            if (resp.ok) {
+              const arrayBuf = await resp.arrayBuffer();
+              const audioBuf = await audioContext.decodeAudioData(arrayBuf);
+              audioSourcesToSchedule.push({
+                buffer: audioBuf,
+                startSec: c.startFrame / fps,
+              });
+            }
+          } catch (err) {
+            console.warn(`[RenderEngine] Não foi possível decodificar áudio do card ${c.id}:`, err);
+          }
+        }
+      }
+
       const audioTrack = dest.stream.getAudioTracks()[0];
       if (audioTrack) {
         stream.addTrack(audioTrack);
@@ -502,7 +534,21 @@ export async function renderProjectToVideo(
 
   recorder.start();
 
+  // Dispara narrações agendadas no lockstep da timeline
+  if (audioContext && audioSourcesToSchedule.length > 0) {
+    const dest = (audioContext as any).__mediaDest;
+    const baseTime = audioContext.currentTime;
+    audioSourcesToSchedule.forEach(({ buffer, startSec }) => {
+      if (!audioContext || !dest) return;
+      const source = audioContext.createBufferSource();
+      source.buffer = buffer;
+      source.connect(dest);
+      source.start(baseTime + startSec);
+    });
+  }
+
   const startTime = performance.now();
+
 
   try {
     // 6. Loop de Renderização Frame a Frame

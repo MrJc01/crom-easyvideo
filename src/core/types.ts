@@ -29,6 +29,12 @@ export interface FieldDefinition {
   description?: string;
   itemLabel?: string;
   itemDefaultValue?: any;
+  itemSchema?: Array<{
+    name: string;
+    label: string;
+    type: FieldType;
+    defaultValue?: any;
+  }>;
 }
 
 // ---------------------------------------------------------------------------

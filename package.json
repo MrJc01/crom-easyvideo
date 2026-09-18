@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "cli": "tsx src/cli/index.ts"
+    "cli": "tsx src/cli/index.ts",
+    "template:create": "node template-kit/cli/create-template.cjs",
+    "template:validate": "node template-kit/cli/validate-template.cjs"
   },
   "dependencies": {
     "html2canvas": "^1.4.1",

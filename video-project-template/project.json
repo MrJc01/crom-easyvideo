@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "title": "Guia Completo de Arquitetura de IA",
+    "fps": 30,
+    "width": 1920,
+    "height": 1080
+  },
+  "cards": [
+    {
+      "id": "scene-1-intro",
+      "order": 0,
+      "templateId": "hero-title",
+      "durationMode": "auto",
+      "manualDurationInFrames": 240,
+      "manualDurationInSeconds": 8,
+      "audioPaddingEndInSeconds": 0.8,
+      "audio": {
+        "mode": "tts",
+        "script": "Seja bem-vindo a esta apresentação sobre arquitetura de inteligência artificial.",
+        "voiceId": "pt-BR-Antonio",
+        "provider": "browser-tts",
+        "speed": 1,
+        "audioDurationInSeconds": 5.5
+      },
+      "transition": {
+        "type": "fade",
+        "durationInFrames": 15
+      },
+      "props": {
+        "showBadge": true,
+        "badge": "DEEP DIVE TECNOLÓGICO",
+        "title": "Guia Completo de Arquitetura de IA",
+        "showSubtitle": true,
+        "subtitle": "Criado e montado programaticamente via CLI.",
+        "accentColor": "#6366f1",
+        "glowColor": "#312e81"
+      }
+    },
+    {
+      "id": "scene-2-concept",
+      "order": 1,
+      "templateId": "concept-definition",
+      "durationMode": "auto",
+      "manualDurationInFrames": 210,
+      "manualDurationInSeconds": 7,
+      "audioPaddingEndInSeconds": 0.8,
+      "audio": {
+        "mode": "tts",
+        "script": "Os blocos de atenção realizam projeções lineares no mesmo espaço semântico.",
+        "voiceId": "pt-BR-Francisca",
+        "provider": "browser-tts",
+        "speed": 1,
+        "audioDurationInSeconds": 5
+      },
+      "transition": {
+        "type": "slide-left",
+        "durationInFrames": 15
+      },
+      "props": {
+        "term": "Mecanismo de Atenção",
+        "phonetic": "/əˈtɛn.ʃən/",
+        "category": "ARQUITETURA TRANSFORMER",
+        "definition": "Algoritmo que pondera a relevância dinâmica entre cada par de tokens no contexto.",
+        "accentColor": "#38bdf8"
+      }
+    },
+    {
+      "id": "scene-3-metrics",
+      "order": 2,
+      "templateId": "big-stat",
+      "durationMode": "auto",
+      "manualDurationInFrames": 210,
+      "manualDurationInSeconds": 7,
+      "audioPaddingEndInSeconds": 0.8,
+      "audio": {
+        "mode": "tts",
+        "script": "Alcançamos noventa e nove por cento de acurácia com noventa milissegundos de latência.",
+        "voiceId": "pt-BR-Antonio",
+        "provider": "browser-tts",
+        "speed": 1,
+        "audioDurationInSeconds": 6
+      },
+      "transition": {
+        "type": "fade",
+        "durationInFrames": 15
+      },
+      "props": {
+        "badge": "BENCHMARK DE PERFORMANCE",
+        "number": "99.4%",
+        "label": "Precisão em Inferência Zero-Shot",
+        "sublabel": "Redução de 84% de latência versus modelos tradicionais.",
+        "accentColor": "#10b981"
+      }
+    },
+    {
+      "id": "scene-4-outro",
+      "order": 3,
+      "templateId": "cta-subscribe",
+      "durationMode": "auto",
+      "manualDurationInFrames": 180,
+      "manualDurationInSeconds": 6,
+      "audioPaddingEndInSeconds": 0.8,
+      "audio": {
+        "mode": "tts",
+        "script": "Obrigado por assistir. Inscreva-se para acompanhar novas análises técnicas.",
+        "voiceId": "pt-BR-Brenda",
+        "provider": "browser-tts",
+        "speed": 1,
+        "audioDurationInSeconds": 5
+      },
+      "props": {
+        "badge": "CANAL DE TECNOLOGIA",
+        "headline": "Inscreva-se no Canal",
+        "subheadline": "Novos vídeos semanais sobre engenharia de software e IA.",
+        "buttonText": "Inscrever-se",
+        "accentColor": "#6366f1"
+      }
+    }
+  ]
+}

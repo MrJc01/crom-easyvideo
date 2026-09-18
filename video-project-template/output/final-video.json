@@ -1,0 +1,89 @@
+{
+  "title": "Guia Completo de Arquitetura de IA",
+  "renderedAt": "2026-09-18T19:04:59.846Z",
+  "fps": 30,
+  "totalFrames": 741,
+  "durationSeconds": 24.7,
+  "target": "youtube",
+  "scenesCount": 4,
+  "outputFile": "/home/j/Documentos/GitHub/crom-easyvideo/video-project-template/output/final-video.json",
+  "status": "completed",
+  "scenes": [
+    {
+      "id": "scene-1-intro",
+      "templateId": "hero-title",
+      "startFrame": 0,
+      "endFrame": 189,
+      "durationInFrames": 189,
+      "transition": {
+        "type": "fade",
+        "durationInFrames": 15
+      },
+      "audio": {
+        "mode": "tts",
+        "script": "Seja bem-vindo a esta apresentação sobre arquitetura de inteligência artificial.",
+        "voiceId": "pt-BR-Antonio",
+        "provider": "browser-tts",
+        "speed": 1,
+        "audioDurationInSeconds": 5.5
+      }
+    },
+    {
+      "id": "scene-2-concept",
+      "templateId": "concept-definition",
+      "startFrame": 189,
+      "endFrame": 363,
+      "durationInFrames": 174,
+      "transition": {
+        "type": "slide-left",
+        "durationInFrames": 15
+      },
+      "audio": {
+        "mode": "tts",
+        "script": "Os blocos de atenção realizam projeções lineares no mesmo espaço semântico.",
+        "voiceId": "pt-BR-Francisca",
+        "provider": "browser-tts",
+        "speed": 1,
+        "audioDurationInSeconds": 5
+      }
+    },
+    {
+      "id": "scene-3-metrics",
+      "templateId": "big-stat",
+      "startFrame": 363,
+      "endFrame": 567,
+      "durationInFrames": 204,
+      "transition": {
+        "type": "fade",
+        "durationInFrames": 15
+      },
+      "audio": {
+        "mode": "tts",
+        "script": "Alcançamos noventa e nove por cento de acurácia com noventa milissegundos de latência.",
+        "voiceId": "pt-BR-Antonio",
+        "provider": "browser-tts",
+        "speed": 1,
+        "audioDurationInSeconds": 6
+      }
+    },
+    {
+      "id": "scene-4-outro",
+      "templateId": "cta-subscribe",
+      "startFrame": 567,
+      "endFrame": 741,
+      "durationInFrames": 174,
+      "transition": {
+        "type": "none",
+        "durationInFrames": 0
+      },
+      "audio": {
+        "mode": "tts",
+        "script": "Obrigado por assistir. Inscreva-se para acompanhar novas análises técnicas.",
+        "voiceId": "pt-BR-Brenda",
+        "provider": "browser-tts",
+        "speed": 1,
+        "audioDurationInSeconds": 5
+      }
+    }
+  ]
+}

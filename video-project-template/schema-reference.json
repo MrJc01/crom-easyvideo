@@ -1,0 +1,1292 @@
+[
+  {
+    "id": "hero-title",
+    "name": "Hero Title Tech",
+    "category": "Abertura & Título",
+    "description": "Abertura de impacto cinematográfico com badge dinâmico e visibilidade modular.",
+    "defaultProps": {
+      "showBadge": true,
+      "badge": "DEEP DIVE TECNOLÓGICO",
+      "title": "Como Funcionam os LLMs",
+      "showSubtitle": true,
+      "subtitle": "Da matemática dos vetores à revolução dos Transformers modernos",
+      "accentColor": "#6366f1",
+      "glowColor": "#312e81"
+    },
+    "schema": [
+      {
+        "name": "showBadge",
+        "label": "Exibir Badge Superior",
+        "type": "toggle",
+        "defaultValue": true
+      },
+      {
+        "name": "badge",
+        "label": "Texto do Badge",
+        "type": "text",
+        "defaultValue": "DEEP DIVE TECNOLÓGICO"
+      },
+      {
+        "name": "title",
+        "label": "Título Principal",
+        "type": "text",
+        "defaultValue": "Como Funcionam os LLMs"
+      },
+      {
+        "name": "showSubtitle",
+        "label": "Exibir Subtítulo",
+        "type": "toggle",
+        "defaultValue": true
+      },
+      {
+        "name": "subtitle",
+        "label": "Subtítulo",
+        "type": "textarea",
+        "defaultValue": "Da matemática dos vetores..."
+      },
+      {
+        "name": "accentColor",
+        "label": "Cor de Destaque",
+        "type": "color",
+        "defaultValue": "#6366f1"
+      },
+      {
+        "name": "glowColor",
+        "label": "Cor de Fundo Glow",
+        "type": "color",
+        "defaultValue": "#312e81"
+      }
+    ]
+  },
+  {
+    "id": "big-headline",
+    "name": "Headline Impactante",
+    "category": "Abertura & Título",
+    "description": "Frase de alto impacto com tipografia superdimensionada e barra decorativa.",
+    "defaultProps": {
+      "showKicker": true,
+      "kicker": "MUDANÇA DE PARADIGMA",
+      "headline": "O Fim da Busca Tradicional",
+      "accent": "#ec4899",
+      "showAccentBar": true
+    },
+    "schema": [
+      {
+        "name": "showKicker",
+        "label": "Exibir Chamada Curta",
+        "type": "toggle",
+        "defaultValue": true
+      },
+      {
+        "name": "kicker",
+        "label": "Chamada Curta",
+        "type": "text",
+        "defaultValue": "MUDANÇA DE PARADIGMA"
+      },
+      {
+        "name": "headline",
+        "label": "Manchete Principal",
+        "type": "text",
+        "defaultValue": "O Fim da Busca Tradicional"
+      },
+      {
+        "name": "showAccentBar",
+        "label": "Exibir Barra de Destaque",
+        "type": "toggle",
+        "defaultValue": true
+      },
+      {
+        "name": "accent",
+        "label": "Cor de Destaque",
+        "type": "color",
+        "defaultValue": "#ec4899"
+      }
+    ]
+  },
+  {
+    "id": "glitch-cyber",
+    "name": "Terminal Cyberpunk",
+    "category": "Abertura & Título",
+    "description": "Estilo sci-fi com gradiente neon, estética de console e status animado.",
+    "defaultProps": {
+      "systemTag": "SYS_BOOT // MODEL_INITIALIZE",
+      "header": "NEURAL WEIGHTS LOADED",
+      "subtext": "175 bilhões de parâmetros prontos para inferência imediata.",
+      "showLiveIndicator": true
+    },
+    "schema": [
+      {
+        "name": "systemTag",
+        "label": "Tag do Sistema",
+        "type": "text",
+        "defaultValue": "SYS_BOOT // MODEL_INITIALIZE"
+      },
+      {
+        "name": "header",
+        "label": "Cabeçalho Terminal",
+        "type": "text",
+        "defaultValue": "NEURAL WEIGHTS LOADED"
+      },
+      {
+        "name": "subtext",
+        "label": "Subtexto Informativo",
+        "type": "textarea",
+        "defaultValue": "175 bilhões de parâmetros..."
+      },
+      {
+        "name": "showLiveIndicator",
+        "label": "Exibir Indicador Online",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  {
+    "id": "minimal-split",
+    "name": "Minimal Split Titular",
+    "category": "Abertura & Título",
+    "description": "Divisão em 2 colunas para contrapor categoria e mensagem focal.",
+    "defaultProps": {
+      "category": "ARQUITETURA",
+      "leftTitle": "Processamento Paralelo",
+      "rightDescription": "Diferente das RNNs sequenciais, os Transformers analisam todas as palavras ao mesmo tempo."
+    },
+    "schema": [
+      {
+        "name": "category",
+        "label": "Categoria",
+        "type": "text",
+        "defaultValue": "ARQUITETURA"
+      },
+      {
+        "name": "leftTitle",
+        "label": "Título Esquerdo",
+        "type": "text",
+        "defaultValue": "Processamento Paralelo"
+      },
+      {
+        "name": "rightDescription",
+        "label": "Texto Direito",
+        "type": "textarea",
+        "defaultValue": "Diferente das RNNs..."
+      }
+    ]
+  },
+  {
+    "id": "podcast-intro",
+    "name": "Banner Podcast / Talk",
+    "category": "Abertura & Título",
+    "description": "Visual moderno para abertura de podcasts e entrevistas técnicas.",
+    "defaultProps": {
+      "episode": "EPISÓDIO 42",
+      "topic": "Como a Inteligência Artificial Conquistou a Linguagem",
+      "host": "Apresentado por IA Studio"
+    },
+    "schema": [
+      {
+        "name": "episode",
+        "label": "Tag / Episódio",
+        "type": "text",
+        "defaultValue": "EPISÓDIO 42"
+      },
+      {
+        "name": "topic",
+        "label": "Tema Principal",
+        "type": "textarea",
+        "defaultValue": "Como a Inteligência Artificial..."
+      },
+      {
+        "name": "host",
+        "label": "Apresentador",
+        "type": "text",
+        "defaultValue": "Apresentado por IA Studio"
+      }
+    ]
+  },
+  {
+    "id": "media-split-showcase",
+    "name": "Split Mídia & Explicação",
+    "category": "Mídia & Demonstração",
+    "description": "Lado a lado com imagem ou vídeo com controle de corte (trim) e lista de tópicos modular.",
+    "defaultProps": {
+      "title": "Demonstração Prática",
+      "badge": "AO VIVO",
+      "media": {
+        "type": "image",
+        "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80",
+        "trimStart": 0,
+        "trimEnd": 5,
+        "objectFit": "cover"
+      },
+      "bullets": [
+        "Execução em tempo real no browser",
+        "Sincronização de frames com Remotion Player",
+        "Suporte a vídeo cortado e imagens em alta definição"
+      ],
+      "showBadge": true
+    },
+    "schema": [
+      {
+        "name": "showBadge",
+        "label": "Exibir Badge",
+        "type": "toggle",
+        "defaultValue": true
+      },
+      {
+        "name": "badge",
+        "label": "Texto do Badge",
+        "type": "text",
+        "defaultValue": "AO VIVO"
+      },
+      {
+        "name": "title",
+        "label": "Título do Destaque",
+        "type": "text",
+        "defaultValue": "Demonstração Prática"
+      },
+      {
+        "name": "media",
+        "label": "Mídia (Vídeo ou Imagem)",
+        "type": "media",
+        "defaultValue": null
+      },
+      {
+        "name": "bullets",
+        "label": "Tópicos Dinâmicos",
+        "type": "array",
+        "itemLabel": "Tópico",
+        "itemDefaultValue": "Novo tópico explicativo",
+        "defaultValue": [
+          "Tópico 1",
+          "Tópico 2"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "video-hero-bg",
+    "name": "Vídeo Hero Background",
+    "category": "Mídia & Demonstração",
+    "description": "Vídeo em tela cheia com overlay ajustável e tipografia de título animada.",
+    "defaultProps": {
+      "media": {
+        "type": "video",
+        "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "trimStart": 1,
+        "trimEnd": 6,
+        "objectFit": "cover"
+      },
+      "title": "Visão Computacional & LLMs Multimodais",
+      "subtitle": "Processamento simultâneo de frames de vídeo e texto.",
+      "overlayOpacity": 65,
+      "showSubtitle": true
+    },
+    "schema": [
+      {
+        "name": "media",
+        "label": "Vídeo de Fundo",
+        "type": "media",
+        "defaultValue": null
+      },
+      {
+        "name": "title",
+        "label": "Título",
+        "type": "text",
+        "defaultValue": "Visão Computacional"
+      },
+      {
+        "name": "showSubtitle",
+        "label": "Exibir Subtítulo",
+        "type": "toggle",
+        "defaultValue": true
+      },
+      {
+        "name": "subtitle",
+        "label": "Subtítulo",
+        "type": "textarea",
+        "defaultValue": "Processamento simultâneo..."
+      },
+      {
+        "name": "overlayOpacity",
+        "label": "Opacidade do Escurecimento (%)",
+        "type": "number",
+        "defaultValue": 65
+      }
+    ]
+  },
+  {
+    "id": "device-mockup",
+    "name": "Device Mockup (App / Web)",
+    "category": "Mídia & Demonstração",
+    "description": "Simulador de tela de smartphone ou notebook com gravação de tela dentro.",
+    "defaultProps": {
+      "headline": "Interface do Usuário",
+      "subtext": "Demonstração da experiência interativa em tempo real.",
+      "media": {
+        "type": "image",
+        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80",
+        "trimStart": 0,
+        "trimEnd": 4,
+        "objectFit": "cover"
+      }
+    },
+    "schema": [
+      {
+        "name": "headline",
+        "label": "Título do Destaque",
+        "type": "text",
+        "defaultValue": "Interface do Usuário"
+      },
+      {
+        "name": "subtext",
+        "label": "Subtexto",
+        "type": "textarea",
+        "defaultValue": "Demonstração..."
+      },
+      {
+        "name": "media",
+        "label": "Mídia da Tela",
+        "type": "media",
+        "defaultValue": null
+      }
+    ]
+  },
+  {
+    "id": "picture-in-picture",
+    "name": "Picture-in-Picture (PiP)",
+    "category": "Mídia & Demonstração",
+    "description": "Layout para reação ou demonstração com janela flutuante recortada.",
+    "defaultProps": {
+      "mainTitle": "Arquitetura Multimodal",
+      "explanation": "Modelos de linguagem agora integram fluxos de vídeo ao vivo com raciocínio contextual.",
+      "media": {
+        "type": "image",
+        "url": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
+        "trimStart": 0,
+        "trimEnd": 4,
+        "objectFit": "cover"
+      },
+      "pipLabel": "Câmera / Demonstração"
+    },
+    "schema": [
+      {
+        "name": "mainTitle",
+        "label": "Título Principal",
+        "type": "text",
+        "defaultValue": "Arquitetura Multimodal"
+      },
+      {
+        "name": "explanation",
+        "label": "Explicação",
+        "type": "textarea",
+        "defaultValue": "Modelos de linguagem..."
+      },
+      {
+        "name": "pipLabel",
+        "label": "Etiqueta da Janela PiP",
+        "type": "text",
+        "defaultValue": "Câmera / Demonstração"
+      },
+      {
+        "name": "media",
+        "label": "Mídia Flutuante (PiP)",
+        "type": "media",
+        "defaultValue": null
+      }
+    ]
+  },
+  {
+    "id": "before-after-media",
+    "name": "Comparativo Antes vs Depois",
+    "category": "Mídia & Demonstração",
+    "description": "Compara duas imagens ou fluxos com etiquetas personalizadas.",
+    "defaultProps": {
+      "title": "Transformação de Dados",
+      "labelBefore": "Entrada Bruta (Texto Desestruturado)",
+      "labelAfter": "Saída Estruturada (JSON / Ações)",
+      "beforeText": "Logs e relatórios manuais de 100 páginas sem índice.",
+      "afterText": "Extração automática em schema estrito em menos de 2 segundos."
+    },
+    "schema": [
+      {
+        "name": "title",
+        "label": "Título",
+        "type": "text",
+        "defaultValue": "Transformação de Dados"
+      },
+      {
+        "name": "labelBefore",
+        "label": "Rótulo Antes",
+        "type": "text",
+        "defaultValue": "Entrada Bruta"
+      },
+      {
+        "name": "beforeText",
+        "label": "Descrição Antes",
+        "type": "textarea",
+        "defaultValue": "Logs e relatórios..."
+      },
+      {
+        "name": "labelAfter",
+        "label": "Rótulo Depois",
+        "type": "text",
+        "defaultValue": "Saída Estruturada"
+      },
+      {
+        "name": "afterText",
+        "label": "Descrição Depois",
+        "type": "textarea",
+        "defaultValue": "Extração automática..."
+      }
+    ]
+  },
+  {
+    "id": "media-gallery-showcase",
+    "name": "Galeria de Destaque",
+    "category": "Mídia & Demonstração",
+    "description": "Exibe uma imagem principal com moldura técnica e dados de inferência.",
+    "defaultProps": {
+      "title": "Visualização de Tensores",
+      "caption": "Espaço latente gerado por redes neurais generativas.",
+      "media": {
+        "type": "image",
+        "url": "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&w=1000&q=80",
+        "trimStart": 0,
+        "trimEnd": 4,
+        "objectFit": "cover"
+      }
+    },
+    "schema": [
+      {
+        "name": "title",
+        "label": "Título",
+        "type": "text",
+        "defaultValue": "Visualização de Tensores"
+      },
+      {
+        "name": "caption",
+        "label": "Legenda Técnica",
+        "type": "textarea",
+        "defaultValue": "Espaço latente..."
+      },
+      {
+        "name": "media",
+        "label": "Imagem / Mídia",
+        "type": "media",
+        "defaultValue": null
+      }
+    ]
+  },
+  {
+    "id": "browser-frame-showcase",
+    "name": "Mockup de Navegador Web",
+    "category": "Mídia & Demonstração",
+    "description": "Enquadra imagens ou gravações de vídeo em uma janela de browser funcional.",
+    "defaultProps": {
+      "url": "https://app.plataforma.io/dashboard",
+      "mediaSrc": {
+        "type": "image",
+        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1000&q=80",
+        "objectFit": "cover"
+      },
+      "caption": "Ambiente de produção com atualização semântica instantânea",
+      "accentColor": "#38bdf8"
+    },
+    "schema": [
+      {
+        "name": "url",
+        "label": "Endereço URL",
+        "type": "text",
+        "defaultValue": "https://app.plataforma.io"
+      },
+      {
+        "name": "mediaSrc",
+        "label": "Vídeo do Sistema",
+        "type": "media",
+        "defaultValue": null
+      },
+      {
+        "name": "caption",
+        "label": "Legenda Inferior",
+        "type": "text",
+        "defaultValue": "Ambiente de produção..."
+      },
+      {
+        "name": "accentColor",
+        "label": "Cor de Destaque",
+        "type": "color",
+        "defaultValue": "#38bdf8"
+      }
+    ]
+  },
+  {
+    "id": "concept-definition",
+    "name": "Definição & Tópicos Modulares",
+    "category": "Conceitos & Explicações",
+    "description": "Definição conceitual com lista dinâmica de tópicos (adicionar e remover itens dinamicamente).",
+    "defaultProps": {
+      "showTag": true,
+      "tag": "CONCEITO FUNDAMENTAL",
+      "conceptTitle": "O que é um LLM?",
+      "statement": "Um Large Language Model é uma rede neural artificial profunda treinada para capturar padrões probabilísticos na linguagem humana.",
+      "bulletPoints": [
+        "Modelos treinados em terabytes de dados da internet",
+        "Predizem a próxima palavra com base em contexto estatístico",
+        "Base da arquitetura Transformer lançada em 2017"
+      ]
+    },
+    "schema": [
+      {
+        "name": "showTag",
+        "label": "Exibir Tag",
+        "type": "toggle",
+        "defaultValue": true
+      },
+      {
+        "name": "tag",
+        "label": "Tag Superior",
+        "type": "text",
+        "defaultValue": "CONCEITO FUNDAMENTAL"
+      },
+      {
+        "name": "conceptTitle",
+        "label": "Título do Conceito",
+        "type": "text",
+        "defaultValue": "O que é um LLM?"
+      },
+      {
+        "name": "statement",
+        "label": "Declaração Principal",
+        "type": "textarea",
+        "defaultValue": "Um Large Language Model..."
+      },
+      {
+        "name": "bulletPoints",
+        "label": "Tópicos Dinâmicos (Adicionar/Remover)",
+        "type": "array",
+        "itemLabel": "Tópico Explicativo",
+        "itemDefaultValue": "Novo ponto conceitual",
+        "defaultValue": [
+          "Ponto 1",
+          "Ponto 2",
+          "Ponto 3"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "question-dilemma",
+    "name": "Pergunta / O Dilema",
+    "category": "Conceitos & Explicações",
+    "description": "Gera curiosidade com uma questão central reflexiva e contexto secundário.",
+    "defaultProps": {
+      "question": "Eles realmente entendem o que dizem?",
+      "context": "Ou são apenas papagaios estocásticos que combinam palavras com base em probabilidade matemática?",
+      "showIcon": true
+    },
+    "schema": [
+      {
+        "name": "showIcon",
+        "label": "Exibir Ícone Central",
+        "type": "toggle",
+        "defaultValue": true
+      },
+      {
+        "name": "question",
+        "label": "Pergunta Principal",
+        "type": "text",
+        "defaultValue": "Eles realmente entendem?"
+      },
+      {
+        "name": "context",
+        "label": "Contextualização",
+        "type": "textarea",
+        "defaultValue": "Ou são apenas..."
+      }
+    ]
+  },
+  {
+    "id": "quote-statement",
+    "name": "Citação de Autoridade",
+    "category": "Conceitos & Explicações",
+    "description": "Citação de papers célebres com autor e ano de publicação.",
+    "defaultProps": {
+      "quote": "\"Attention Is All You Need.\"",
+      "author": "Vaswani et al. (Google Brain & Research)",
+      "year": "NeurIPS 2017"
+    },
+    "schema": [
+      {
+        "name": "quote",
+        "label": "Citação",
+        "type": "textarea",
+        "defaultValue": "\"Attention Is All You Need.\""
+      },
+      {
+        "name": "author",
+        "label": "Autor(es)",
+        "type": "text",
+        "defaultValue": "Vaswani et al."
+      },
+      {
+        "name": "year",
+        "label": "Ano / Publicação",
+        "type": "text",
+        "defaultValue": "NeurIPS 2017"
+      }
+    ]
+  },
+  {
+    "id": "fact-check",
+    "name": "Mito vs Fato",
+    "category": "Conceitos & Explicações",
+    "description": "Contraste direto entre mito popular e evidência científica.",
+    "defaultProps": {
+      "myth": "LLMs possuem consciência e sentimentos próprios.",
+      "fact": "São funções matemáticas de predição de tokens treinadas com gradiente descendente."
+    },
+    "schema": [
+      {
+        "name": "myth",
+        "label": "O Mito",
+        "type": "textarea",
+        "defaultValue": "LLMs possuem consciência..."
+      },
+      {
+        "name": "fact",
+        "label": "O Fato Técnico",
+        "type": "textarea",
+        "defaultValue": "São funções matemáticas..."
+      }
+    ]
+  },
+  {
+    "id": "glossary-term",
+    "name": "Termo de Glossário",
+    "category": "Conceitos & Explicações",
+    "description": "Explicação detalhada com pronúncia e significado de jargões técnicos.",
+    "defaultProps": {
+      "term": "Temperature",
+      "phonetic": "/ˈtɛmp.rə.tʃər/",
+      "meaning": "Hiperparâmetro que calibra a aleatoriedade da distribuição de probabilidade na amostragem Softmax."
+    },
+    "schema": [
+      {
+        "name": "term",
+        "label": "Termo / Jargão",
+        "type": "text",
+        "defaultValue": "Temperature"
+      },
+      {
+        "name": "phonetic",
+        "label": "Pronúncia / Guia",
+        "type": "text",
+        "defaultValue": "/ˈtɛmp.rə.tʃər/"
+      },
+      {
+        "name": "meaning",
+        "label": "Significado",
+        "type": "textarea",
+        "defaultValue": "Hiperparâmetro que calibra..."
+      }
+    ]
+  },
+  {
+    "id": "step-guide-modular",
+    "name": "Passo a Passo Modular",
+    "category": "Conceitos & Explicações",
+    "description": "Lista ordenada de passos configurável com adição e remoção dinâmica.",
+    "defaultProps": {
+      "title": "Ciclo de Treinamento",
+      "steps": [
+        "Pré-treinamento com trilhões de tokens de texto",
+        "Supervised Fine-Tuning (SFT) com instruções humanas",
+        "Alinhamento com RLHF (Reinforcement Learning from Human Feedback)"
+      ]
+    },
+    "schema": [
+      {
+        "name": "title",
+        "label": "Título do Processo",
+        "type": "text",
+        "defaultValue": "Ciclo de Treinamento"
+      },
+      {
+        "name": "steps",
+        "label": "Passos Dinâmicos",
+        "type": "array",
+        "itemLabel": "Passo",
+        "itemDefaultValue": "Nova etapa do ciclo",
+        "defaultValue": [
+          "Etapa 1",
+          "Etapa 2",
+          "Etapa 3"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tokens-embeddings",
+    "name": "Tokens & Embeddings",
+    "category": "Arquitetura & IA",
+    "description": "Demonstração animada da quebra de texto em tokens e coordenadas vetoriais.",
+    "defaultProps": {
+      "title": "Como o Modelo \"Enxerga\" o Texto",
+      "sentence": "A inteligência artificial transforma texto em números",
+      "tokens": "A;intelig;ência;artific;ial;trans;forma;texto;em;números",
+      "showDimensions": true
+    },
+    "schema": [
+      {
+        "name": "title",
+        "label": "Título",
+        "type": "text",
+        "defaultValue": "Como o Modelo \"Enxerga\" o Texto"
+      },
+      {
+        "name": "sentence",
+        "label": "Frase de Entrada",
+        "type": "text",
+        "defaultValue": "A inteligência artificial..."
+      },
+      {
+        "name": "tokens",
+        "label": "Tokens (separados por ;)",
+        "type": "text",
+        "defaultValue": "A;intelig;ência;artific;ial;trans;forma;texto;em;números"
+      },
+      {
+        "name": "showDimensions",
+        "label": "Exibir Dimensões Vetoriais",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  {
+    "id": "attention-transformer",
+    "name": "Mecanismo de Atenção",
+    "category": "Arquitetura & IA",
+    "description": "Visualização de conexões e pesos matemáticos de autoatenção entre palavras.",
+    "defaultProps": {
+      "title": "Mecanismo de Atenção (Transformers)",
+      "description": "A palavra \"cansado\" calcula pesos matemáticos para relacionar-se com o sujeito \"animal\".",
+      "showFormula": true
+    },
+    "schema": [
+      {
+        "name": "title",
+        "label": "Título",
+        "type": "text",
+        "defaultValue": "Mecanismo de Atenção"
+      },
+      {
+        "name": "description",
+        "label": "Descrição da Regra",
+        "type": "textarea",
+        "defaultValue": "A palavra calcula pesos..."
+      },
+      {
+        "name": "showFormula",
+        "label": "Exibir Fórmula Softmax",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  {
+    "id": "code-snippet",
+    "name": "Código PyTorch / API",
+    "category": "Arquitetura & IA",
+    "description": "Bloco de código de sintaxe para demonstrar algoritmos ou chamadas de API.",
+    "defaultProps": {
+      "filename": "transformer.py",
+      "code": "class SelfAttention(nn.Module):\n  def forward(self, x):\n    scores = q @ k.transpose(-2, -1) / sqrt(d)\n    return softmax(scores) @ v"
+    },
+    "schema": [
+      {
+        "name": "filename",
+        "label": "Nome do Arquivo",
+        "type": "text",
+        "defaultValue": "transformer.py"
+      },
+      {
+        "name": "code",
+        "label": "Código",
+        "type": "textarea",
+        "defaultValue": "class SelfAttention..."
+      }
+    ]
+  },
+  {
+    "id": "layer-stack",
+    "name": "Pilha de Camadas",
+    "category": "Arquitetura & IA",
+    "description": "Representação de camadas profundas empilhadas com indicação de blocos.",
+    "defaultProps": {
+      "stackCount": "96 Camadas Repetidas",
+      "layerA": "Multi-Head Self Attention",
+      "layerB": "Add & Layer Normalization",
+      "layerC": "Feed Forward Neural Network"
+    },
+    "schema": [
+      {
+        "name": "stackCount",
+        "label": "Repetições",
+        "type": "text",
+        "defaultValue": "96 Camadas Repetidas"
+      },
+      {
+        "name": "layerA",
+        "label": "Camada Superior",
+        "type": "text",
+        "defaultValue": "Multi-Head Self Attention"
+      },
+      {
+        "name": "layerB",
+        "label": "Camada do Meio",
+        "type": "text",
+        "defaultValue": "Add & Layer Normalization"
+      },
+      {
+        "name": "layerC",
+        "label": "Camada Inferior",
+        "type": "text",
+        "defaultValue": "Feed Forward Neural Network"
+      }
+    ]
+  },
+  {
+    "id": "neural-graph",
+    "name": "Grafo Sináptico",
+    "category": "Arquitetura & IA",
+    "description": "Nós neurais interconectados demonstrando ativação de tensores.",
+    "defaultProps": {
+      "caption": "Interconexão de Parâmetros e Pesos Sinápticos",
+      "layersInfo": "Entrada -> Hidden Layers -> Saída Probabilística"
+    },
+    "schema": [
+      {
+        "name": "caption",
+        "label": "Legenda",
+        "type": "text",
+        "defaultValue": "Interconexão de Parâmetros..."
+      },
+      {
+        "name": "layersInfo",
+        "label": "Descrição de Camadas",
+        "type": "text",
+        "defaultValue": "Entrada -> Hidden..."
+      }
+    ]
+  },
+  {
+    "id": "system-architecture",
+    "name": "Arquitetura RAG & LLM",
+    "category": "Arquitetura & IA",
+    "description": "Visão macro de integração entre Banco Vetorial, Modelo LLM e Saída.",
+    "defaultProps": {
+      "client": "Usuário (Prompt)",
+      "vectorDb": "Vector Store (Chroma / Pinecone)",
+      "llm": "Fundação LLM (Claude / GPT)",
+      "output": "Resposta Grounded"
+    },
+    "schema": [
+      {
+        "name": "client",
+        "label": "Origem",
+        "type": "text",
+        "defaultValue": "Usuário (Prompt)"
+      },
+      {
+        "name": "vectorDb",
+        "label": "Banco Vetorial",
+        "type": "text",
+        "defaultValue": "Vector Store"
+      },
+      {
+        "name": "llm",
+        "label": "Modelo LLM",
+        "type": "text",
+        "defaultValue": "Fundação LLM"
+      },
+      {
+        "name": "output",
+        "label": "Saída Grounded",
+        "type": "text",
+        "defaultValue": "Resposta Grounded"
+      }
+    ]
+  },
+  {
+    "id": "deep-dive-architecture",
+    "name": "Arquitetura Completa de Sistema",
+    "category": "Arquitetura & IA",
+    "description": "Card complexo com vídeo integrado, telemetria de 3 métricas, terminal vivo e régua temporal de 10s.",
+    "defaultProps": {
+      "systemBadge": "CASO DE ESTUDO #04",
+      "architectureTitle": "Migração de Render Engine para WebAssembly",
+      "systemSubheading": "Pipeline de transcodificação de alta velocidade sem gargalo em CPU server-side.",
+      "videoSrc": "https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-42898-large.mp4",
+      "videoCaption": "Figura 1.1: Thread pool dedicada executando shaders computacionais em paralelo.",
+      "metric1Label": "Throughput",
+      "metric1Value": "2.4 GB/s",
+      "metric2Label": "Otimização CPU",
+      "metric2Value": "-72%",
+      "metric3Label": "Frame Drops",
+      "metric3Value": "0.00%",
+      "logLine1": "[INIT] Inicializando workers WASM compartilhando SharedArrayBuffer...",
+      "logLine2": "[SYNC] Pipeline GPU vinculada. Injeção de frames em 16.6ms ativada.",
+      "logLine3": "[OK] Telemetria validada: zero perdas registradas em 10.000 amostras.",
+      "accentColor": "#38bdf8",
+      "showLivePulse": true
+    },
+    "schema": [
+      {
+        "name": "systemBadge",
+        "label": "Badge Superior",
+        "type": "text",
+        "defaultValue": "CASO DE ESTUDO #04"
+      },
+      {
+        "name": "architectureTitle",
+        "label": "Título Principal",
+        "type": "text",
+        "defaultValue": "Migração de Render Engine"
+      },
+      {
+        "name": "systemSubheading",
+        "label": "Texto de Rodapé",
+        "type": "text",
+        "defaultValue": "Pipeline de transcodificação..."
+      },
+      {
+        "name": "videoSrc",
+        "label": "Vídeo Demonstrativo",
+        "type": "media",
+        "defaultValue": ""
+      },
+      {
+        "name": "videoCaption",
+        "label": "Legenda do Player",
+        "type": "text",
+        "defaultValue": "Figura 1.1: Thread pool..."
+      },
+      {
+        "name": "metric1Label",
+        "label": "Rótulo Métrica 1",
+        "type": "text",
+        "defaultValue": "Throughput"
+      },
+      {
+        "name": "metric1Value",
+        "label": "Valor Métrica 1",
+        "type": "text",
+        "defaultValue": "2.4 GB/s"
+      },
+      {
+        "name": "metric2Label",
+        "label": "Rótulo Métrica 2",
+        "type": "text",
+        "defaultValue": "Otimização CPU"
+      },
+      {
+        "name": "metric2Value",
+        "label": "Valor Métrica 2",
+        "type": "text",
+        "defaultValue": "-72%"
+      },
+      {
+        "name": "metric3Label",
+        "label": "Rótulo Métrica 3",
+        "type": "text",
+        "defaultValue": "Frame Drops"
+      },
+      {
+        "name": "metric3Value",
+        "label": "Valor Métrica 3",
+        "type": "text",
+        "defaultValue": "0.00%"
+      },
+      {
+        "name": "logLine1",
+        "label": "Log Linha 1",
+        "type": "text",
+        "defaultValue": "[INIT] Inicializando..."
+      },
+      {
+        "name": "logLine2",
+        "label": "Log Linha 2",
+        "type": "text",
+        "defaultValue": "[SYNC] Pipeline vinculada..."
+      },
+      {
+        "name": "logLine3",
+        "label": "Log Linha 3",
+        "type": "text",
+        "defaultValue": "[OK] Telemetria validada..."
+      },
+      {
+        "name": "accentColor",
+        "label": "Cor do Sistema",
+        "type": "color",
+        "defaultValue": "#38bdf8"
+      },
+      {
+        "name": "showLivePulse",
+        "label": "Exibir Badge Ao Vivo",
+        "type": "toggle",
+        "defaultValue": true
+      }
+    ]
+  },
+  {
+    "id": "comparative-metrics",
+    "name": "Comparativo de Métricas",
+    "category": "Dados, Métricas & Encerramento",
+    "description": "Barras comparativas com cálculo dinâmico de percentuais.",
+    "defaultProps": {
+      "title": "Modelos Clássicos vs LLMs Modernos",
+      "modelA": "RNN / LSTM (2015)",
+      "modelB": "Transformer SOTA (2024)",
+      "metric1Label": "Janela de Contexto",
+      "metric2Label": "Paralelização de Treino",
+      "metric3Label": "Raciocínio Geral"
+    },
+    "schema": [
+      {
+        "name": "title",
+        "label": "Título",
+        "type": "text",
+        "defaultValue": "Modelos Clássicos vs LLMs"
+      },
+      {
+        "name": "modelA",
+        "label": "Modelo A",
+        "type": "text",
+        "defaultValue": "RNN / LSTM"
+      },
+      {
+        "name": "modelB",
+        "label": "Modelo B",
+        "type": "text",
+        "defaultValue": "Transformer SOTA"
+      },
+      {
+        "name": "metric1Label",
+        "label": "Métrica 1",
+        "type": "text",
+        "defaultValue": "Janela de Contexto"
+      },
+      {
+        "name": "metric2Label",
+        "label": "Métrica 2",
+        "type": "text",
+        "defaultValue": "Paralelização"
+      },
+      {
+        "name": "metric3Label",
+        "label": "Métrica 3",
+        "type": "text",
+        "defaultValue": "Raciocínio Geral"
+      }
+    ]
+  },
+  {
+    "id": "versus-battle",
+    "name": "Batalha A vs B",
+    "category": "Dados, Métricas & Encerramento",
+    "description": "Confronto direto lado a lado entre duas abordagens tecnológicas rivais.",
+    "defaultProps": {
+      "sideA": "Open Source (Llama / Mistral)",
+      "sideB": "Closed API (GPT-4 / Claude)",
+      "pointA": "Privacidade total & Auto-hospedagem local sem envio de dados.",
+      "pointB": "SOTA máximo em raciocínio & Zero complexidade operacional."
+    },
+    "schema": [
+      {
+        "name": "sideA",
+        "label": "Lado A",
+        "type": "text",
+        "defaultValue": "Open Source"
+      },
+      {
+        "name": "pointA",
+        "label": "Destaque A",
+        "type": "textarea",
+        "defaultValue": "Privacidade total..."
+      },
+      {
+        "name": "sideB",
+        "label": "Lado B",
+        "type": "text",
+        "defaultValue": "Closed API"
+      },
+      {
+        "name": "pointB",
+        "label": "Destaque B",
+        "type": "textarea",
+        "defaultValue": "SOTA máximo..."
+      }
+    ]
+  },
+  {
+    "id": "pros-cons-modular",
+    "name": "Vantagens & Desvantagens",
+    "category": "Dados, Métricas & Encerramento",
+    "description": "Listas dinâmicas de prós e contras com suporte a adição e remoção.",
+    "defaultProps": {
+      "pros": [
+        "Altíssima velocidade",
+        "Sem custos de API por requisição",
+        "Customização total de pesos"
+      ],
+      "cons": [
+        "Exige GPU de ponta com alta VRAM",
+        "Alucinações possíveis",
+        "Manutenção contínua de servidor"
+      ]
+    },
+    "schema": [
+      {
+        "name": "pros",
+        "label": "Vantagens (Prós)",
+        "type": "array",
+        "itemLabel": "Vantagem",
+        "itemDefaultValue": "Nova vantagem técnica",
+        "defaultValue": [
+          "Vantagem 1",
+          "Vantagem 2"
+        ]
+      },
+      {
+        "name": "cons",
+        "label": "Desvantagens (Contras)",
+        "type": "array",
+        "itemLabel": "Desvantagem",
+        "itemDefaultValue": "Nova desvantagem técnica",
+        "defaultValue": [
+          "Desvantagem 1",
+          "Desvantagem 2"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "big-stat",
+    "name": "Estatística Numérica Central",
+    "category": "Dados, Métricas & Encerramento",
+    "description": "Destaque visual para um percentual ou número expressivo de benchmark.",
+    "defaultProps": {
+      "percentage": "92.4%",
+      "label": "Acurácia MMLU",
+      "description": "Capacidade em testes acadêmicos de nível de pós-graduação."
+    },
+    "schema": [
+      {
+        "name": "percentage",
+        "label": "Valor / Porcentagem",
+        "type": "text",
+        "defaultValue": "92.4%"
+      },
+      {
+        "name": "label",
+        "label": "Rótulo da Métrica",
+        "type": "text",
+        "defaultValue": "Acurácia MMLU"
+      },
+      {
+        "name": "description",
+        "label": "Explicação Curta",
+        "type": "textarea",
+        "defaultValue": "Capacidade em testes..."
+      }
+    ]
+  },
+  {
+    "id": "key-takeaways",
+    "name": "Conclusão Chave",
+    "category": "Dados, Métricas & Encerramento",
+    "description": "Destaque de uma única grande mensagem definitiva para finalizar.",
+    "defaultProps": {
+      "badge": "CONCLUSÃO FINAL",
+      "takeaway": "O segredo não é mágica: é matemática vetorial, dados e poder computacional massivo."
+    },
+    "schema": [
+      {
+        "name": "badge",
+        "label": "Badge Superior",
+        "type": "text",
+        "defaultValue": "CONCLUSÃO FINAL"
+      },
+      {
+        "name": "takeaway",
+        "label": "Mensagem Central",
+        "type": "textarea",
+        "defaultValue": "O segredo não é mágica..."
+      }
+    ]
+  },
+  {
+    "id": "cta-subscribe",
+    "name": "Chamada para Ação (CTA)",
+    "category": "Dados, Métricas & Encerramento",
+    "description": "Card final com convite para inscrição, comunidade ou link de download.",
+    "defaultProps": {
+      "action": "Gostou da Explicação?",
+      "subtext": "Inscreva-se no canal para mais análises profundas de Engenharia de IA.",
+      "channel": "@CanalTechAI"
+    },
+    "schema": [
+      {
+        "name": "action",
+        "label": "Ação Desejada",
+        "type": "text",
+        "defaultValue": "Gostou da Explicação?"
+      },
+      {
+        "name": "subtext",
+        "label": "Instrução",
+        "type": "textarea",
+        "defaultValue": "Inscreva-se no canal..."
+      },
+      {
+        "name": "channel",
+        "label": "Canal / Nome",
+        "type": "text",
+        "defaultValue": "@CanalTechAI"
+      }
+    ]
+  },
+  {
+    "id": "credits-outro",
+    "name": "Créditos da Produção",
+    "category": "Dados, Métricas & Encerramento",
+    "description": "Encerramento formal com créditos técnicos e menção à equipe.",
+    "defaultProps": {
+      "producedBy": "Produzido por Remotion Video Studio",
+      "techStack": "React • Remotion • Tailwind CSS",
+      "license": "Licença Aberta Educacional 2026"
+    },
+    "schema": [
+      {
+        "name": "producedBy",
+        "label": "Produção",
+        "type": "text",
+        "defaultValue": "Produzido por Remotion Studio"
+      },
+      {
+        "name": "techStack",
+        "label": "Tecnologias",
+        "type": "text",
+        "defaultValue": "React • Remotion"
+      },
+      {
+        "name": "license",
+        "label": "Licença / Ano",
+        "type": "text",
+        "defaultValue": "Licença Educacional 2026"
+      }
+    ]
+  }
+]
