@@ -29,6 +29,57 @@ export default function App() {
   const [mobileView, setMobileView] = useState<'both' | 'player' | 'inspector'>('both');
   const [currentView, setCurrentView] = useState<'studio' | 'cards' | 'sandbox' | 'docs'>('studio');
 
+  const [workspaces, setWorkspaces] = useState<Array<{ id: string; name: string; path: string }>>([]);
+  const [activeWorkspace, setActiveWorkspace] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('workspace') || urlParams.get('w') || 'meus_videos/video-resumindo0';
+    }
+    return 'meus_videos/video-resumindo0';
+  });
+  const [isLoadingWorkspace, setIsLoadingWorkspace] = useState<boolean>(false);
+
+  const loadWorkspace = (wsPath: string) => {
+    setIsLoadingWorkspace(true);
+    fetch(`/api/project?workspace=${encodeURIComponent(wsPath)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && Array.isArray(data.cards) && data.cards.length > 0) {
+          setProject(data);
+          setSelectedCardId(data.cards[0].id);
+          setCurrentFrame(0);
+          setIsPlaying(false);
+          setActiveWorkspace(wsPath);
+          if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('workspace', wsPath);
+            window.history.replaceState({}, '', url.toString());
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Falha ao carregar workspace:', err);
+      })
+      .finally(() => {
+        setIsLoadingWorkspace(false);
+      });
+  };
+
+  useEffect(() => {
+    // Listar workspaces disponíveis
+    fetch('/api/workspaces')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((list) => {
+        if (Array.isArray(list) && list.length > 0) {
+          setWorkspaces(list);
+        }
+      })
+      .catch(() => {});
+
+    // Carregar workspace selecionado via URL ou padrão
+    loadWorkspace(activeWorkspace);
+  }, []);
+
   const { calculatedCards, totalFrames } = useMemo(() => {
     return calculateTimeline(project.cards, project.meta.fps);
   }, [project.cards, project.meta.fps]);
@@ -159,6 +210,39 @@ export default function App() {
               {project.meta.title}
             </p>
           </div>
+        </div>
+
+        {/* Seletor Dinâmico de Workspace */}
+        <div className="flex items-center gap-1.5 bg-slate-950/80 border border-slate-800 hover:border-slate-700 rounded-xl px-2.5 py-1.5 transition shrink-0">
+          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          <select
+            value={activeWorkspace}
+            onChange={(e) => loadWorkspace(e.target.value)}
+            disabled={isLoadingWorkspace}
+            title="Selecionar Workspace / Projeto"
+            aria-label="Selecionar Workspace"
+            className="bg-transparent text-[11px] font-mono text-indigo-300 font-semibold focus:outline-none cursor-pointer max-w-[150px] sm:max-w-[220px] truncate"
+          >
+            {workspaces.map((ws) => (
+              <option key={ws.path} value={ws.path} className="bg-slate-900 text-slate-200 font-sans">
+                📁 {ws.name}
+              </option>
+            ))}
+            {!workspaces.some((ws) => ws.path === activeWorkspace) && (
+              <option value={activeWorkspace} className="bg-slate-900 text-slate-200 font-sans">
+                📁 {activeWorkspace}
+              </option>
+            )}
+          </select>
+          {isLoadingWorkspace ? (
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping shrink-0" title="Carregando..." />
+          ) : (
+            <span className="text-[10px] text-emerald-400 font-mono shrink-0 font-bold hidden sm:inline" title="Cards carregados">
+              {project.cards.length} cards
+            </span>
+          )}
         </div>
 
         {/* Navigation Selector de Rotas / Abas no Topo */}

@@ -28,6 +28,23 @@ export const DeepDiveArchitectureComponent: React.FC<TemplateRenderProps> = ({
   fps,
 }) => {
   const p = props as DeepDiveArchitectureProps;
+  const anyProps = props as any;
+
+  const systemBadge = p.systemBadge || anyProps.badge || 'ARQUITETURA DE IA';
+  const architectureTitle = p.architectureTitle || anyProps.title || 'Análise de Arquitetura';
+  const systemSubheading = p.systemSubheading || anyProps.subtitle || anyProps.description || '';
+  const accentColor = p.accentColor || anyProps.accentColor || '#38bdf8';
+
+  const m1Val = p.metric1Value || anyProps.primaryMetric || '2.4 GB/s';
+  const m1Lbl = p.metric1Label || anyProps.primaryLabel || 'Throughput';
+  const m2Val = p.metric2Value || anyProps.secondaryMetric || '-72%';
+  const m2Lbl = p.metric2Label || anyProps.secondaryLabel || 'Otimização';
+  const m3Val = p.metric3Value || anyProps.tertiaryMetric || '0.00%';
+  const m3Lbl = p.metric3Label || anyProps.tertiaryLabel || 'Perdas';
+
+  const rawLog1 = p.logLine1 || '[INIT] Alocação de tensores e matrizes em VRAM compartilhada...';
+  const rawLog2 = p.logLine2 || '[SYNC] Pipeline paralelo de atenção computacional ativo...';
+  const rawLog3 = p.logLine3 || '[OK] Telemetria validada: convergência estrita confirmada.';
 
   // Molas em cascata para entrada coreografada ao longo do tempo
   const headerSpring = spring({
@@ -61,9 +78,9 @@ export const DeepDiveArchitectureComponent: React.FC<TemplateRenderProps> = ({
     return (text || '').slice(0, charCount);
   };
 
-  const typedLog1 = typeChar(p.logLine1, 30);
-  const typedLog2 = typeChar(p.logLine2, 50);
-  const typedLog3 = typeChar(p.logLine3, 70);
+  const typedLog1 = typeChar(rawLog1, 30);
+  const typedLog2 = typeChar(rawLog2, 50);
+  const typedLog3 = typeChar(rawLog3, 70);
 
   // Barra de progresso de execução do card na timeline (0% a 100% ao longo de 10s = 300 frames a 30fps)
   const timelineProgress = Math.min(100, (frame / (fps * 10)) * 100);
@@ -72,7 +89,7 @@ export const DeepDiveArchitectureComponent: React.FC<TemplateRenderProps> = ({
     <div
       className="w-full h-full flex flex-col justify-between p-12 select-none bg-slate-950 text-slate-100 relative overflow-hidden font-sans"
       style={{
-        background: `radial-gradient(ellipse at 80% 10%, ${p.accentColor || '#38bdf8'}1c 0%, transparent 60%), radial-gradient(circle at 10% 90%, #030712 0%, #020617 100%)`,
+        background: `radial-gradient(ellipse at 80% 10%, ${accentColor}1c 0%, transparent 60%), radial-gradient(circle at 10% 90%, #030712 0%, #020617 100%)`,
       }}
     >
       {/* Grid de Fundo Sutil */}
@@ -91,23 +108,23 @@ export const DeepDiveArchitectureComponent: React.FC<TemplateRenderProps> = ({
             <span
               className="font-mono text-xs font-bold tracking-widest px-2.5 py-0.5 rounded border uppercase"
               style={{
-                borderColor: `${p.accentColor || '#38bdf8'}60`,
-                backgroundColor: `${p.accentColor || '#38bdf8'}18`,
-                color: p.accentColor || '#38bdf8',
+                borderColor: `${accentColor}60`,
+                backgroundColor: `${accentColor}18`,
+                color: accentColor,
               }}
             >
-              {p.systemBadge}
+              {systemBadge}
             </span>
             <span className="text-slate-500 font-mono text-xs">ARCH_INSPECTOR // V3.8</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-white">{p.architectureTitle}</h1>
+          <h1 className="text-3xl font-black tracking-tight text-white">{architectureTitle}</h1>
         </div>
 
-        {p.showLivePulse && (
+        {p.showLivePulse !== false && (
           <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl text-xs font-mono text-slate-300 shadow-inner">
             <span
               className="w-2.5 h-2.5 rounded-full animate-ping"
-              style={{ backgroundColor: p.accentColor || '#38bdf8' }}
+              style={{ backgroundColor: accentColor }}
             />
             <span>STREAMING ATIVO</span>
           </div>
@@ -116,7 +133,7 @@ export const DeepDiveArchitectureComponent: React.FC<TemplateRenderProps> = ({
 
       {/* 2. CENTRO: Grid Duplo (Player em Destaque + Coluna Analítica) */}
       <main className="w-full flex-1 grid grid-cols-12 gap-8 my-6 items-stretch z-10 min-h-0">
-        {/* Lado Esquerdo: Player de Vídeo em Moldura Industrial (7 colunas) */}
+        {/* Lado Esquerdo: Player de Vídeo ou Painel Vetorial Visual (7 colunas) */}
         <div
           className="col-span-7 flex flex-col justify-between rounded-2xl bg-slate-900/60 border border-slate-800 p-4 backdrop-blur-md shadow-2xl relative"
           style={{
@@ -124,16 +141,39 @@ export const DeepDiveArchitectureComponent: React.FC<TemplateRenderProps> = ({
             opacity: mainStageSpring,
           }}
         >
-          <div className="relative w-full flex-1 rounded-xl overflow-hidden bg-black border border-slate-800/80">
-            <MediaRenderer
-              src={p.videoSrc}
-              className="w-full h-full object-cover"
-            />
+          <div className="relative w-full flex-1 rounded-xl overflow-hidden bg-black/80 border border-slate-800/80 flex items-center justify-center">
+            {p.videoSrc ? (
+              <MediaRenderer
+                src={p.videoSrc}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 relative overflow-hidden bg-gradient-to-b from-slate-900/60 to-slate-950/80">
+                <div
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 border shadow-xl"
+                  style={{
+                    backgroundColor: `${accentColor}18`,
+                    borderColor: `${accentColor}50`,
+                    color: accentColor,
+                  }}
+                >
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-extrabold text-white mb-2">{architectureTitle}</h3>
+                {systemSubheading && (
+                  <p className="text-xs text-slate-400 max-w-md font-sans leading-relaxed">
+                    {systemSubheading}
+                  </p>
+                )}
+              </div>
+            )}
             <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded text-xs font-mono text-slate-300 border border-white/10">
               LATÊNCIA: 12ms // BUFFER: 100%
             </div>
           </div>
-          <p className="text-xs font-mono text-slate-400 mt-3 truncate">{p.videoCaption}</p>
+          <p className="text-xs font-mono text-slate-400 mt-3 truncate">{p.videoCaption || systemSubheading}</p>
         </div>
 
         {/* Lado Direito: Métricas Rápidas + Terminal Dinâmico (5 colunas) */}
@@ -147,21 +187,21 @@ export const DeepDiveArchitectureComponent: React.FC<TemplateRenderProps> = ({
             }}
           >
             {[
-              { val: p.metric1Value, lbl: p.metric1Label },
-              { val: p.metric2Value, lbl: p.metric2Label },
-              { val: p.metric3Value, lbl: p.metric3Label },
+              { val: m1Val, lbl: m1Lbl },
+              { val: m2Val, lbl: m2Lbl },
+              { val: m3Val, lbl: m3Lbl },
             ].map((m, idx) => (
               <div
                 key={idx}
                 className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/90 flex flex-col justify-center"
               >
                 <span
-                  className="font-mono text-2xl font-black tracking-tight"
-                  style={{ color: idx === 1 ? (p.accentColor || '#38bdf8') : '#ffffff' }}
+                  className="font-mono text-lg sm:text-xl font-black tracking-tight truncate"
+                  style={{ color: idx === 0 ? accentColor : '#ffffff' }}
                 >
                   {m.val}
                 </span>
-                <span className="text-[11px] text-slate-400 font-medium leading-tight mt-1">
+                <span className="text-[10px] text-slate-400 font-medium leading-tight mt-1 line-clamp-2">
                   {m.lbl}
                 </span>
               </div>

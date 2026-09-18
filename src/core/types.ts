@@ -55,7 +55,8 @@ export interface TTSAudioConfig {
 export interface FileAudioConfig {
   mode: 'file';
   fileUrl: string;
-  fileName: string;
+  audioUrl?: string;
+  fileName?: string;
   audioDurationInSeconds: number;
 }
 

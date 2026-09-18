@@ -64,34 +64,51 @@ export const llmPipelineFlowTemplate: TemplateDefinition = {
     const nodes = Array.isArray(p.nodes) ? p.nodes : [];
 
     return (
-      <div className="w-full h-full flex flex-col justify-between p-20 bg-slate-950 relative overflow-hidden select-none">
+      <div
+        className="w-full h-full flex flex-col justify-between bg-slate-950 relative overflow-hidden select-none"
+        style={{
+          paddingTop: 'var(--safe-top, 80px)',
+          paddingBottom: 'var(--safe-bottom, 80px)',
+          paddingLeft: 'var(--safe-left, 80px)',
+          paddingRight: 'var(--safe-right, 80px)',
+        }}
+      >
         {/* Fundo com linhas de grade tecnológica */}
         <div className="absolute inset-0 opacity-10 pointer-events-none bg-[linear-gradient(to_right,#38bdf8_1px,transparent_1px),linear-gradient(to_bottom,#38bdf8_1px,transparent_1px)] bg-[size:40px_40px]" />
 
         {/* Topo: Título e Identificador */}
         <div
-          className="max-w-4xl space-y-4"
+          className="max-w-4xl space-y-3 shrink-0"
           style={{
-            transform: `translateY(${(1 - titleS) * 30}px)`,
+            transform: `translateY(${(1 - titleS) * -15}px)`,
             opacity: titleS,
           }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-sky-500/30 bg-sky-950/60 text-sky-400 font-mono text-xs font-semibold uppercase tracking-wider">
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-sky-500/30 bg-sky-950/60 text-sky-400 font-mono font-bold uppercase tracking-wider"
+            style={{ fontSize: 'var(--font-badge, 18px)' }}
+          >
             <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
             {p.systemBadge}
           </div>
 
-          <h1 className="text-5xl font-black text-white tracking-tight leading-tight">
+          <h1
+            className="font-black text-white tracking-tight leading-tight"
+            style={{ fontSize: 'var(--font-title, 48px)' }}
+          >
             {p.architectureTitle}
           </h1>
 
-          <p className="text-xl text-slate-300 font-normal leading-relaxed">
+          <p
+            className="text-slate-300 font-normal leading-relaxed"
+            style={{ fontSize: 'var(--font-body, 24px)' }}
+          >
             {p.systemSubheading}
           </p>
         </div>
 
-        {/* Pipeline Horizontal de Nós */}
-        <div className="w-full flex items-center justify-between gap-4 my-auto pt-6">
+        {/* Pipeline Adaptativo de Nós (Grid 1 coluna em vertical ou 4 colunas em landscape) */}
+        <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 my-auto pt-4">
           {nodes.map((node, idx) => {
             const nodeS = spring({
               frame: frame - 6 - idx * 7,
@@ -100,62 +117,57 @@ export const llmPipelineFlowTemplate: TemplateDefinition = {
             });
 
             return (
-              <React.Fragment key={idx}>
-                {/* Cartão do Nó */}
-                <div
-                  className="flex-1 p-6 rounded-2xl border border-slate-800 bg-slate-900/90 shadow-2xl relative flex flex-col justify-between min-h-[160px]"
-                  style={{
-                    transform: `translateY(${(1 - nodeS) * 35}px) scale(${0.9 + nodeS * 0.1})`,
-                    opacity: nodeS,
-                    borderTop: `3px solid ${node.color || '#38bdf8'}`,
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
-                      ESTÁGIO {String(idx + 1).padStart(2, '0')}
-                    </span>
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shadow-lg"
-                      style={{ backgroundColor: node.color || '#38bdf8' }}
-                    />
-                  </div>
-
-                  <div>
-                    <h4 className="text-xl font-bold text-white mb-1.5 tracking-tight">
-                      {node.label}
-                    </h4>
-                    <p className="text-xs font-mono text-slate-400">
-                      {node.sub}
-                    </p>
-                  </div>
+              <div
+                key={idx}
+                className="p-6 rounded-3xl border border-slate-800 bg-slate-900/90 shadow-2xl relative flex flex-col justify-between backdrop-blur-md"
+                style={{
+                  transform: `translateY(${(1 - nodeS) * 25}px) scale(${0.92 + nodeS * 0.08})`,
+                  opacity: nodeS,
+                  borderTop: `4px solid ${node.color || '#38bdf8'}`,
+                }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span
+                    className="font-mono text-slate-400 uppercase tracking-wider font-bold"
+                    style={{ fontSize: 'var(--font-footer, 14px)' }}
+                  >
+                    ESTÁGIO {String(idx + 1).padStart(2, '0')}
+                  </span>
+                  <span
+                    className="w-3 h-3 rounded-full shadow-lg"
+                    style={{ backgroundColor: node.color || '#38bdf8' }}
+                  />
                 </div>
 
-                {/* Conector / Seta entre nós */}
-                {idx < nodes.length - 1 && (
-                  <div
-                    className="flex items-center justify-center text-slate-600 px-1"
-                    style={{
-                      opacity: Math.max(0, Math.min(1, nodeS)),
-                      transform: `scale(${nodeS})`,
-                    }}
+                <div>
+                  <h4
+                    className="font-bold text-white mb-2 tracking-tight"
+                    style={{ fontSize: 'var(--font-item, 22px)' }}
                   >
-                    <svg className="w-6 h-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </div>
-                )}
-              </React.Fragment>
+                    {node.label}
+                  </h4>
+                  <p
+                    className="font-mono text-slate-300"
+                    style={{ fontSize: 'var(--font-footer, 16px)' }}
+                  >
+                    {node.sub}
+                  </p>
+                </div>
+              </div>
             );
           })}
         </div>
 
         {/* Rodapé do Diagrama */}
-        <div className="flex items-center justify-between pt-6 border-t border-slate-800/80 text-xs font-mono text-slate-400">
+        <div
+          className="flex items-center justify-between pt-4 border-t border-slate-800/80 font-mono text-slate-400 shrink-0"
+          style={{ fontSize: 'var(--font-footer, 16px)' }}
+        >
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
             <span>PIPELINE: {p.activePipelineName}</span>
           </div>
-          <span>ESPAÇO CANÔNICO 1920 × 1080</span>
+          <span>ESPAÇO RESPONSIVO ADAPTATIVO</span>
         </div>
       </div>
     );

@@ -48,6 +48,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [selectedPreset, setSelectedPreset] = useState<ResolutionPreset>(
     RESOLUTION_PRESETS[0] // 16:9 1080p padrão
   );
+  const [showSafeZone, setShowSafeZone] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState<number>(0.5);
@@ -134,6 +135,21 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             ))}
           </select>
 
+          {/* Botão de Safe Zone Overlay */}
+          <button
+            type="button"
+            onClick={() => setShowSafeZone(!showSafeZone)}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 shrink-0 ${
+              showSafeZone
+                ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/50 shadow-sm'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+            }`}
+            title="Ativar / Desativar Guias de Safe Zone (TikTok / Reels / Shorts / YouTube)"
+          >
+            <span className="text-xs">🛡️</span>
+            <span className="hidden sm:inline">Safe Zone</span>
+          </button>
+
           {/* Timecode */}
           <span className="font-mono text-xs text-indigo-400 bg-indigo-950/60 border border-indigo-900/60 px-2 py-1 rounded-md shrink-0">
             {timecode}
@@ -178,6 +194,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             project={project}
             calculatedCards={calculatedCards}
             currentFrame={currentFrame}
+            width={selectedPreset.canonicalWidth}
+            height={selectedPreset.canonicalHeight}
+            safeZone={selectedPreset.safeZone}
+            showSafeZoneGuide={showSafeZone}
           />
         </div>
 

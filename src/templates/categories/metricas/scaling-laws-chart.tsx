@@ -52,68 +52,104 @@ export const scalingLawsChartTemplate: TemplateDefinition = {
       : p.metricValue;
 
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center p-16 text-center bg-slate-950 relative overflow-hidden select-none">
+      <div
+        className="w-full h-full flex flex-col items-center justify-between text-center bg-slate-950 relative overflow-hidden select-none"
+        style={{
+          paddingTop: 'var(--safe-top, 80px)',
+          paddingBottom: 'var(--safe-bottom, 80px)',
+          paddingLeft: 'var(--safe-left, 80px)',
+          paddingRight: 'var(--safe-right, 80px)',
+        }}
+      >
         {/* Glow de fundo */}
         <div
-          className="absolute inset-0 opacity-15 pointer-events-none"
+          className="absolute inset-0 opacity-20 pointer-events-none"
           style={{
-            background: `radial-gradient(circle at 50% 50%, ${p.accentColor || '#10b981'} 0%, transparent 60%)`,
+            background: `radial-gradient(circle at 50% 45%, ${p.accentColor || '#10b981'} 0%, transparent 65%)`,
           }}
         />
 
         {/* Badge superior */}
         <div
-          className="px-5 py-2 rounded-full border border-emerald-500/30 bg-emerald-950/60 text-emerald-400 font-mono text-xs font-bold tracking-wider mb-8 shadow-xl"
-          style={{ transform: `scale(${badgeS})`, opacity: badgeS }}
+          className="px-5 py-2 rounded-full border border-emerald-500/30 bg-emerald-950/60 text-emerald-400 font-mono font-bold tracking-wider shrink-0 shadow-xl"
+          style={{
+            transform: `scale(${badgeS})`,
+            opacity: badgeS,
+            fontSize: 'var(--font-badge, 18px)',
+          }}
         >
           {p.badge}
         </div>
 
-        {/* Valor Numérico Gigante */}
-        <div
-          className="flex items-baseline justify-center gap-2 font-black tracking-tighter leading-none"
-          style={{
-            transform: `scale(${0.85 + numberS * 0.15}) translateY(${(1 - numberS) * 30}px)`,
-            opacity: numberS,
-            color: p.accentColor || '#10b981',
-          }}
-        >
-          <span className="text-[140px] drop-shadow-2xl font-mono">
-            {animatedDisplayValue}
-          </span>
-          <span className="text-6xl text-slate-400 font-sans font-bold">
-            {p.metricUnit}
-          </span>
+        {/* Bloco Central: Valor Numérico Gigante + Rótulo */}
+        <div className="my-auto flex flex-col items-center justify-center max-w-4xl">
+          <div
+            className="flex items-baseline justify-center gap-3 font-black tracking-tighter leading-none"
+            style={{
+              transform: `scale(${0.85 + numberS * 0.15}) translateY(${(1 - numberS) * 25}px)`,
+              opacity: numberS,
+              color: p.accentColor || '#10b981',
+            }}
+          >
+            <span
+              className="drop-shadow-2xl font-mono"
+              style={{ fontSize: 'var(--font-mega, 140px)', lineHeight: '1.0' }}
+            >
+              {animatedDisplayValue}
+            </span>
+            {p.metricUnit && (
+              <span
+                className="text-slate-400 font-sans font-bold"
+                style={{ fontSize: 'clamp(28px, 4cqmin, 56px)' }}
+              >
+                {p.metricUnit}
+              </span>
+            )}
+          </div>
+
+          <h2
+            className="font-extrabold text-white mt-6 tracking-tight"
+            style={{
+              transform: `translateY(${(1 - labelS) * 15}px)`,
+              opacity: labelS,
+              fontSize: 'var(--font-title, 48px)',
+            }}
+          >
+            {p.metricLabel}
+          </h2>
+
+          {/* Tag de Comparação e Descrição */}
+          <div
+            className="mt-6 flex flex-col items-center space-y-3 max-w-2xl"
+            style={{
+              transform: `translateY(${(1 - descS) * 15}px)`,
+              opacity: descS,
+            }}
+          >
+            {p.comparisonText && (
+              <span
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono font-semibold"
+                style={{ fontSize: 'var(--font-item, 20px)' }}
+              >
+                {p.comparisonText}
+              </span>
+            )}
+
+            <p
+              className="text-slate-300 leading-relaxed font-normal"
+              style={{ fontSize: 'var(--font-body, 25px)' }}
+            >
+              {p.description}
+            </p>
+          </div>
         </div>
 
-        {/* Rótulo da Métrica */}
-        <h2
-          className="text-4xl font-extrabold text-white mt-6 max-w-4xl tracking-tight"
-          style={{
-            transform: `translateY(${(1 - labelS) * 20}px)`,
-            opacity: labelS,
-          }}
-        >
-          {p.metricLabel}
-        </h2>
-
-        {/* Tag de Comparação e Descrição */}
+        {/* Rodapé */}
         <div
-          className="mt-6 flex flex-col items-center space-y-3 max-w-2xl"
-          style={{
-            transform: `translateY(${(1 - descS) * 20}px)`,
-            opacity: descS,
-          }}
+          className="text-center font-mono text-slate-500 uppercase tracking-widest shrink-0"
+          style={{ fontSize: 'var(--font-footer, 16px)' }}
         >
-          {p.comparisonText && (
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono text-sm font-semibold">
-              {p.comparisonText}
-            </span>
-          )}
-
-          <p className="text-xl text-slate-400 leading-relaxed font-normal">
-            {p.description}
-          </p>
+          ANÁLISE DE ESCALA COMPUTACIONAL (CHINCHILLA & KAPLAN)
         </div>
       </div>
     );

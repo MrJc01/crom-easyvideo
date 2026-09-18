@@ -32,31 +32,44 @@ export const heroTitleTemplate: TemplateDefinition = {
     const subS = spring({ frame: frame - 12, fps });
     return (
       <div
-        className="w-full h-full flex flex-col items-center justify-center p-12 text-center relative overflow-hidden select-none"
+        className="w-full h-full flex flex-col items-center justify-center text-center relative overflow-hidden select-none"
         style={{
+          padding: 'var(--safe-top, 80px) var(--safe-right, 100px) var(--safe-bottom, 80px) var(--safe-left, 100px)',
           background: `radial-gradient(circle at 50% 40%, ${props.glowColor || '#312e81'} 0%, #030712 85%)`,
         }}
       >
         <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:28px_28px]" />
         {props.showBadge && (
           <div
-            className="px-6 py-2 rounded-full border border-indigo-500/40 bg-indigo-950/80 text-indigo-300 font-mono text-lg font-bold tracking-wider mb-6 flex items-center gap-2.5 shadow-xl"
-            style={{ transform: `scale(${badgeS})`, opacity: badgeS }}
+            className="px-6 py-2.5 rounded-full border border-indigo-500/40 bg-indigo-950/80 text-indigo-300 font-mono font-bold tracking-wider mb-6 flex items-center gap-2.5 shadow-xl"
+            style={{
+              fontSize: 'var(--font-badge, 18px)',
+              transform: `scale(${badgeS})`,
+              opacity: badgeS,
+            }}
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-ping" />
+            <span className="w-3 h-3 rounded-full bg-indigo-400 animate-ping" />
             {props.badge}
           </div>
         )}
         <h1
-          className="text-6xl font-black text-white tracking-tight leading-tight max-w-5xl drop-shadow-2xl"
-          style={{ transform: `translateY(${(1 - titleS) * 30}px) scale(${titleS})`, opacity: titleS }}
+          className="font-black text-white tracking-tight leading-tight max-w-5xl drop-shadow-2xl"
+          style={{
+            fontSize: 'var(--font-hero, 72px)',
+            transform: `translateY(${(1 - titleS) * 30}px) scale(${titleS})`,
+            opacity: titleS,
+          }}
         >
           {props.title}
         </h1>
         {props.showSubtitle && (
           <p
-            className="text-2xl text-slate-300 max-w-3xl mt-6 font-normal leading-relaxed"
-            style={{ transform: `translateY(${(1 - subS) * 20}px)`, opacity: subS }}
+            className="text-slate-300 max-w-4xl mt-6 font-medium leading-relaxed"
+            style={{
+              fontSize: 'var(--font-subtitle, 32px)',
+              transform: `translateY(${(1 - subS) * 20}px)`,
+              opacity: subS,
+            }}
           >
             {props.subtitle}
           </p>

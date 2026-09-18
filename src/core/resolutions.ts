@@ -8,6 +8,8 @@
  * zero distorção, zero alteração de tamanho de texto e zero quebra de linha.
  */
 
+import { SAFE_ZONE_PRESETS, type SafeZoneGuide } from './typography';
+
 export interface ResolutionPreset {
   id: string;
   label: string;
@@ -19,6 +21,7 @@ export interface ResolutionPreset {
   aspectRatio: string;     // Representação CSS (ex: '16 / 9', '9 / 16')
   aspectRatioNum: number;  // Fração numérica para cálculos rápidos
   category: 'widescreen' | 'vertical' | 'square' | 'portrait';
+  safeZone: SafeZoneGuide; // Margens de segurança de interface
 }
 
 export const RESOLUTION_PRESETS: ResolutionPreset[] = [
@@ -33,6 +36,7 @@ export const RESOLUTION_PRESETS: ResolutionPreset[] = [
     aspectRatio: '16 / 9',
     aspectRatioNum: 16 / 9,
     category: 'widescreen',
+    safeZone: SAFE_ZONE_PRESETS['16:9'],
   },
   {
     id: '16-9-720',
@@ -45,6 +49,7 @@ export const RESOLUTION_PRESETS: ResolutionPreset[] = [
     aspectRatio: '16 / 9',
     aspectRatioNum: 16 / 9,
     category: 'widescreen',
+    safeZone: SAFE_ZONE_PRESETS['16:9'],
   },
   {
     id: '9-16-1080',
@@ -57,6 +62,7 @@ export const RESOLUTION_PRESETS: ResolutionPreset[] = [
     aspectRatio: '9 / 16',
     aspectRatioNum: 9 / 16,
     category: 'vertical',
+    safeZone: SAFE_ZONE_PRESETS['9:16'],
   },
   {
     id: '1-1-1080',
@@ -69,6 +75,7 @@ export const RESOLUTION_PRESETS: ResolutionPreset[] = [
     aspectRatio: '1 / 1',
     aspectRatioNum: 1 / 1,
     category: 'square',
+    safeZone: SAFE_ZONE_PRESETS['1:1'],
   },
   {
     id: '4-5-1080',
@@ -81,6 +88,7 @@ export const RESOLUTION_PRESETS: ResolutionPreset[] = [
     aspectRatio: '4 / 5',
     aspectRatioNum: 4 / 5,
     category: 'portrait',
+    safeZone: SAFE_ZONE_PRESETS['4:5'],
   },
 ];
 

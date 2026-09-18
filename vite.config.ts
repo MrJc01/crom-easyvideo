@@ -118,6 +118,7 @@ function synthesizeWithCromyvoice(text: string, voice = 'pt-BR-AntonioNeural'): 
 }
 
 const ttsCache = new Map<string, Buffer>();
+let currentWorkspace = 'meus_videos/video-resumindo0';
 
 function ttsApiPlugin(): Plugin {
   const handler = async (req: any, res: any, next: any) => {
@@ -183,6 +184,125 @@ function ttsApiPlugin(): Plugin {
       }
       return;
     }
+
+    // Tratar favicon.ico para evitar 404
+    if (req.url && req.url.startsWith('/favicon.ico')) {
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
+
+    // Endpoint para listar todos os workspaces disponíveis
+    if (req.url && (req.url === '/api/workspaces' || req.url.startsWith('/api/workspaces?'))) {
+      const workspacesDir = path.resolve(process.cwd(), 'meus_videos');
+      const workspaces: Array<{ id: string; name: string; path: string }> = [];
+
+      // Verificar subdiretórios de meus_videos/
+      if (fs.existsSync(workspacesDir)) {
+        try {
+          const entries = fs.readdirSync(workspacesDir, { withFileTypes: true });
+          for (const entry of entries) {
+            if (entry.isDirectory()) {
+              const candidateProject = path.resolve(workspacesDir, entry.name, 'project.json');
+              if (fs.existsSync(candidateProject)) {
+                workspaces.push({
+                  id: `meus_videos/${entry.name}`,
+                  name: entry.name,
+                  path: `meus_videos/${entry.name}`,
+                });
+              }
+            }
+          }
+        } catch (e) {
+          console.error('[Workspaces] Erro ao varrer workspaces:', e);
+        }
+      }
+
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.end(JSON.stringify(workspaces));
+      return;
+    }
+
+    // Endpoint para ler project.json de qualquer workspace
+    if (req.url && req.url.startsWith('/api/project')) {
+      const urlObj = new URL(req.url, 'http://localhost');
+      const requestedWs = urlObj.searchParams.get('workspace') || urlObj.searchParams.get('w');
+      if (requestedWs) {
+        currentWorkspace = requestedWs;
+      }
+      const workspace = requestedWs || currentWorkspace;
+      const projectPath = path.resolve(process.cwd(), workspace, 'project.json');
+      if (fs.existsSync(projectPath)) {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(fs.readFileSync(projectPath, 'utf-8'));
+        return;
+      } else {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({ error: `Workspace project.json not found at ${projectPath}` }));
+        return;
+      }
+    }
+
+    // Servir arquivos de mídia (áudio e imagens) de qualquer workspace
+    const cleanUrl = req.url ? req.url.split('?')[0] : '';
+    const ext = path.extname(cleanUrl).toLowerCase();
+    const mimeMap: Record<string, string> = {
+      '.mp3': 'audio/mpeg',
+      '.wav': 'audio/wav',
+      '.ogg': 'audio/ogg',
+      '.svg': 'image/svg+xml',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.webp': 'image/webp',
+      '.mp4': 'video/mp4',
+    };
+
+    if (mimeMap[ext]) {
+      const relativePath = cleanUrl.replace(/^\/+/, '');
+
+      // 1. Caminho direto relativo à raiz (ex: meus_videos/video-resumindo0/assets/audio/card-01.mp3)
+      let candidate = path.resolve(process.cwd(), relativePath);
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        res.setHeader('Content-Type', mimeMap[ext]);
+        res.setHeader('Content-Length', fs.statSync(candidate).size);
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        fs.createReadStream(candidate).pipe(res);
+        return;
+      }
+
+      // 2. Caminho dentro do workspace ativo (ex: assets/audio/card-01.mp3)
+      candidate = path.resolve(process.cwd(), currentWorkspace, relativePath);
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        res.setHeader('Content-Type', mimeMap[ext]);
+        res.setHeader('Content-Length', fs.statSync(candidate).size);
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        fs.createReadStream(candidate).pipe(res);
+        return;
+      }
+
+      // 3. Fallback: procurar em qualquer workspace dentro de meus_videos/
+      const workspacesDir = path.resolve(process.cwd(), 'meus_videos');
+      if (fs.existsSync(workspacesDir)) {
+        try {
+          const dirs = fs.readdirSync(workspacesDir, { withFileTypes: true });
+          for (const d of dirs) {
+            if (d.isDirectory()) {
+              const subCandidate = path.resolve(workspacesDir, d.name, relativePath);
+              if (fs.existsSync(subCandidate) && fs.statSync(subCandidate).isFile()) {
+                res.setHeader('Content-Type', mimeMap[ext]);
+                res.setHeader('Content-Length', fs.statSync(subCandidate).size);
+                res.setHeader('Cache-Control', 'public, max-age=3600');
+                fs.createReadStream(subCandidate).pipe(res);
+                return;
+              }
+            }
+          }
+        } catch {}
+      }
+    }
+
     next();
   };
 
