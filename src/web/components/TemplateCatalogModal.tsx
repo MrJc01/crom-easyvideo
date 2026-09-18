@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Icons, TemplateIconMap } from '../../core/icons';
-import { CARD_REGISTRY, TEMPLATE_CATEGORIES } from '../../templates/registry';
+import { CARD_REGISTRY, TEMPLATE_CATEGORIES, getAllTemplates } from '../../templates/registry';
+import { isCustomTemplate, deleteCustomTemplate } from '../../core/customTemplates';
 
 export interface TemplateCatalogModalProps {
   isOpen: boolean;
@@ -26,11 +27,29 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
 
   const categories = TEMPLATE_CATEGORIES;
 
-  const templateList = useMemo(() => Object.values(CARD_REGISTRY), []);
-  const filtered =
-    activeCategory === 'Todos'
-      ? templateList
-      : templateList.filter((t) => t.category === activeCategory);
+  // Lista dinâmica e reativa de templates (nativos + customizados salvos)
+  const [templateList, setTemplateList] = useState(() => getAllTemplates());
+
+  useEffect(() => {
+    const refreshList = () => {
+      setTemplateList(getAllTemplates());
+    };
+
+    if (isOpen) {
+      refreshList();
+    }
+
+    window.addEventListener('crom:templates-updated', refreshList);
+    return () => window.removeEventListener('crom:templates-updated', refreshList);
+  }, [isOpen]);
+
+  const filtered = useMemo(() => {
+    if (activeCategory === 'Todos') return templateList;
+    if (activeCategory === 'Customizados') {
+      return templateList.filter((t) => t.id.startsWith('custom-') || isCustomTemplate(t.id));
+    }
+    return templateList.filter((t) => t.category === activeCategory);
+  }, [templateList, activeCategory]);
 
   const activePreviewDef = CARD_REGISTRY[previewTemplateId] || templateList[0];
 
@@ -71,7 +90,7 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
           <div className="min-w-0 pr-2">
             <h2 className="text-base sm:text-xl font-bold text-white flex items-center gap-2 truncate">
               <Icons.Sparkles />
-              <span className="truncate">Loja de Templates (30 Modelos)</span>
+              <span className="truncate">Loja de Templates ({templateList.length} Modelos)</span>
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 truncate hidden xs:block">
               Selecione qualquer template para visualizar o preview animado com mídias e listas.
@@ -132,6 +151,7 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
           >
             {filtered.map((tmpl) => {
               const isSelected = tmpl.id === previewTemplateId;
+              const isCustom = isCustomTemplate(tmpl.id) || tmpl.id.startsWith('custom-') || tmpl.category === 'Customizados';
               const IconComp = TemplateIconMap[tmpl.iconName] || Icons.Film;
 
               return (
@@ -151,9 +171,16 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-950/60 border border-indigo-900/50 text-indigo-400 flex items-center justify-center">
                         <IconComp />
                       </div>
-                      <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                        {tmpl.category}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {isCustom && (
+                          <span className="text-[9px] sm:text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/60">
+                            Custom
+                          </span>
+                        )}
+                        <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                          {tmpl.category}
+                        </span>
+                      </div>
                     </div>
                     <h3 className="text-xs sm:text-sm font-bold text-white group-hover:text-indigo-300 transition">
                       {tmpl.name}
@@ -164,16 +191,36 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
                   </div>
 
                   <div className="mt-3 pt-2.5 border-t border-slate-900 flex items-center justify-between text-xs font-semibold">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPreviewTemplateId(tmpl.id);
-                        setMobileTab('preview');
-                      }}
-                      className="text-indigo-400 hover:text-indigo-300 text-[11px] underline sm:no-underline"
-                    >
-                      Ver Preview
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewTemplateId(tmpl.id);
+                          setMobileTab('preview');
+                        }}
+                        className="text-indigo-400 hover:text-indigo-300 text-[11px] underline sm:no-underline"
+                      >
+                        Ver Preview
+                      </button>
+                      {isCustom && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Deseja excluir o template customizado "${tmpl.name}"?`)) {
+                              deleteCustomTemplate(tmpl.id);
+                              if (previewTemplateId === tmpl.id) {
+                                setPreviewTemplateId('hero-title');
+                              }
+                            }
+                          }}
+                          className="p-1 rounded text-rose-400 hover:text-rose-300 hover:bg-rose-950/60 transition ml-1"
+                          title="Excluir Template Customizado"
+                        >
+                          <Icons.Trash />
+                        </button>
+                      )}
+                    </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

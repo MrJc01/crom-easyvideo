@@ -19,7 +19,7 @@ export const VideoComposition: React.FC<VideoCompositionProps> = ({
     const found = calculatedCards.find(
       (c) => currentFrame >= c.startFrame && currentFrame < c.endFrame
     );
-    return found || calculatedCards[0] || null;
+    return found || calculatedCards[calculatedCards.length - 1] || calculatedCards[0] || null;
   }, [calculatedCards, currentFrame]);
 
   const localFrame = useMemo(() => {

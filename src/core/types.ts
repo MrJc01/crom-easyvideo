@@ -124,9 +124,12 @@ export interface TemplateDefinition {
     | 'Mídia & Demonstração'
     | 'Conceitos & Explicações'
     | 'Arquitetura & IA'
-    | 'Dados, Métricas & Encerramento';
+    | 'Dados, Métricas & Encerramento'
+    | 'Customizados';
   description: string;
   iconName: string;
+  defaultDurationInFrames?: number;
+  minDurationInFrames?: number;
   defaultProps: Record<string, any>;
   schema: FieldDefinition[];
   Component: TemplateComponent;

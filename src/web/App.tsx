@@ -103,13 +103,16 @@ export default function App() {
     const def = CARD_REGISTRY[templateId];
     if (!def) return;
 
+    const defaultFrames = def.defaultDurationInFrames || 120;
+    const defaultSeconds = Math.round((defaultFrames / 30) * 10) / 10;
+
     const newCard: VideoCard = {
       id: `card-${Date.now()}`,
       order: project.cards.length,
       templateId: def.id,
       durationMode: 'auto',
-      manualDurationInFrames: 120,
-      manualDurationInSeconds: 4.0,
+      manualDurationInFrames: defaultFrames,
+      manualDurationInSeconds: defaultSeconds,
       audioPaddingEndInSeconds: 0.8,
       audio: {
         mode: 'tts',
@@ -126,6 +129,7 @@ export default function App() {
       cards: [...prev.cards, newCard],
     }));
     setSelectedCardId(newCard.id);
+    handleSeek(totalFrames);
   };
 
   return (

@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { transform } from 'sucrase';
 import type { TemplateDefinition, TemplateRenderProps } from '../../core/types';
 import { CARD_REGISTRY, registerTemplate } from '../../templates/registry';
 import { spring, interpolate } from '../../core/animations';
@@ -10,8 +9,72 @@ import {
   DEFAULT_RESOLUTION_PRESET,
   calculateCanonicalScale,
 } from '../../core/resolutions';
+import {
+  compileTsxTemplate,
+  saveCustomTemplate,
+  getCustomTemplateSource,
+  isCustomTemplate,
+  deleteCustomTemplate,
+} from '../../core/customTemplates';
 import { MediaFieldEditor } from './MediaFieldEditor';
 import { DynamicArrayField } from './DynamicArrayField';
+import { getShortLoremForField } from '../../core/lorem';
+
+interface StageErrorBoundaryProps {
+  children: React.ReactNode;
+  resetKey?: any;
+}
+
+interface StageErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class StageErrorBoundary extends React.Component<
+  StageErrorBoundaryProps,
+  StageErrorBoundaryState
+> {
+  constructor(props: StageErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): StageErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[Sandbox Canvas Stage Error]:', error, errorInfo);
+  }
+
+  componentDidUpdate(prevProps: StageErrorBoundaryProps) {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-rose-950/90 p-8 text-rose-200 text-center font-mono select-text">
+          <div className="w-12 h-12 rounded-xl bg-rose-900/80 flex items-center justify-center text-rose-300 mb-3 border border-rose-700">
+            <Icons.AlertTriangle />
+          </div>
+          <h3 className="text-sm font-bold text-rose-300 mb-1">
+            Erro de Execução no Componente
+          </h3>
+          <p className="text-xs max-w-lg bg-black/60 p-3 rounded-lg border border-rose-800/80 text-rose-300 overflow-x-auto text-left whitespace-pre-wrap mb-3">
+            {this.state.error?.message || 'Erro desconhecido'}
+          </p>
+          <span className="text-[11px] text-rose-400/80">
+            Edite o código TSX ou ajuste as propriedades para resolver.
+          </span>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Mapeamento automático em tempo de build de todos os 30 arquivos .tsx nativos das categorias
 const RAW_TEMPLATE_FILES = import.meta.glob(
@@ -23,13 +86,20 @@ const RAW_TEMPLATE_FILES = import.meta.glob(
  * Localiza o código-fonte .tsx bruto correspondente ao templateId
  */
 function getRawTemplateSource(id: string): string {
+  // 1. Verifica se é um template customizado persistido com código TSX salvo
+  const customSrc = getCustomTemplateSource(id);
+  if (customSrc) {
+    return customSrc;
+  }
+
+  // 2. Busca entre os templates nativos do projeto
   for (const [filePath, content] of Object.entries(RAW_TEMPLATE_FILES)) {
     if (filePath.endsWith(`/${id}.tsx`)) {
       return content;
     }
   }
 
-  // Fallback para templates customizados gerados em tempo de execução
+  // 3. Fallback para templates gerados dinamicamente
   const def = CARD_REGISTRY[id];
   if (def) {
     return generateBoilerplateFromDef(def);
@@ -79,58 +149,67 @@ export default ${def.id.replace(/[-_](\w)/g, (_, c) => c.toUpperCase())}Template
 }
 
 /**
- * Compila e avalia código TSX dinamicamente em runtime no navegador via Sucrase
+ * Detecta a duração recomendada em frames para um template com base na sua definição ou código TSX.
  */
-function compileTsxTemplate(tsxCode: string): {
-  template?: TemplateDefinition;
-  error?: string;
-} {
-  try {
-    const compiled = transform(tsxCode, {
-      transforms: ['typescript', 'jsx', 'imports'],
-      jsxRuntime: 'classic',
-    }).code;
-
-    const exportsObj: Record<string, any> = {};
-    const moduleObj = { exports: exportsObj };
-
-    const customRequire = (name: string) => {
-      if (name === 'react' || name.endsWith('/react')) {
-        return React;
-      }
-      if (name.includes('animations')) {
-        return { spring, interpolate };
-      }
-      if (name.includes('icons')) {
-        return { Icons, TemplateIconMap };
-      }
-      if (name.includes('types')) {
-        return {};
-      }
-      return {};
-    };
-
-    const fn = new Function('require', 'exports', 'module', 'React', compiled);
-    fn(customRequire, exportsObj, moduleObj, React);
-
-    const found =
-      exportsObj.default ||
-      Object.values(exportsObj).find(
-        (v) => v && typeof v === 'object' && typeof v.Component === 'function'
-      );
-
-    if (!found || typeof found.Component !== 'function') {
-      return {
-        error: 'O código deve exportar um TemplateDefinition com uma função "Component".',
-      };
-    }
-
-    return { template: found as TemplateDefinition };
-  } catch (err: unknown) {
+function detectAnimationDurationInFrames(
+  code: string,
+  def?: TemplateDefinition | null
+): { detectedFrames: number; reason?: string } {
+  // 1. Se a definição explicitamente define defaultDurationInFrames ou minDurationInFrames
+  if (def?.defaultDurationInFrames && def.defaultDurationInFrames > 0) {
     return {
-      error: err instanceof Error ? err.message : String(err),
+      detectedFrames: def.defaultDurationInFrames,
+      reason: `Definido no template (${def.defaultDurationInFrames}f = ${(def.defaultDurationInFrames / 30).toFixed(1)}s)`,
     };
   }
+  if (def?.minDurationInFrames && def.minDurationInFrames > 0) {
+    return {
+      detectedFrames: def.minDurationInFrames,
+      reason: `Mínimo exigido (${def.minDurationInFrames}f = ${(def.minDurationInFrames / 30).toFixed(1)}s)`,
+    };
+  }
+
+  if (!code) return { detectedFrames: 90 };
+
+  // 2. Busca por padrão explícito no código (ex: defaultDurationInFrames: 300)
+  const durationMatch = code.match(/defaultDurationInFrames\s*:\s*(\d+)/);
+  if (durationMatch) {
+    const f = parseInt(durationMatch[1], 10);
+    if (f > 0) return { detectedFrames: f, reason: `defaultDurationInFrames: ${f}f` };
+  }
+
+  // 3. Busca por cálculos temporais baseados em fps (ex: (frame / (fps * 10)) ou fps * 10)
+  const fpsMultMatch = code.match(/fps\s*\*\s*(\d+(?:\.\d+)?)/i);
+  if (fpsMultMatch) {
+    const sec = parseFloat(fpsMultMatch[1]);
+    if (sec > 0) {
+      const f = Math.round(sec * 30);
+      return { detectedFrames: f, reason: `Cálculo de régua temporal em ${sec}s (${f}f)` };
+    }
+  }
+
+  // 4. Busca por frames de início tardios em máquinas de escrever ou molas
+  let maxFrameFound = 0;
+  const startFrameMatches = Array.from(code.matchAll(/(?:startFrame|frame\s*-\s*)(\d+)/gi));
+  for (const m of startFrameMatches) {
+    const f = parseInt(m[1], 10);
+    if (f > maxFrameFound) maxFrameFound = f;
+  }
+  const typeCharMatches = Array.from(code.matchAll(/typeChar\([^,]+,\s*(\d+)/gi));
+  for (const m of typeCharMatches) {
+    const f = parseInt(m[1], 10);
+    if (f > maxFrameFound) maxFrameFound = f;
+  }
+
+  if (maxFrameFound >= 60) {
+    const estimatedFrames = Math.max(180, Math.ceil((maxFrameFound + 120) / 30) * 30);
+    return {
+      detectedFrames: Math.min(600, estimatedFrames),
+      reason: `Animações tardias detectadas no frame ${maxFrameFound}`,
+    };
+  }
+
+  return { detectedFrames: 90 };
 }
 
 export interface TemplateSandboxProps {
@@ -172,7 +251,9 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
 
   // Controle de frames e reprodução local
   const [localFrame, setLocalFrame] = useState<number>(15);
-  const [maxFrames, setMaxFrames] = useState<number>(90);
+  const [maxFrames, setMaxFrames] = useState<number>(() => {
+    return activeTemplate?.defaultDurationInFrames || 90;
+  });
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -197,8 +278,20 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
       setJsonText(JSON.stringify(initialProps, null, 2));
       setJsonError(null);
       setLocalFrame(15);
+
+      const { detectedFrames } = detectAnimationDurationInFrames(code, activeTemplate);
+      if (detectedFrames > 0) {
+        setMaxFrames(detectedFrames);
+      }
     }
   }, [activeTemplate?.id]);
+
+  // Garante que o frame local não exceda o limite máximo quando a duração for reduzida
+  useEffect(() => {
+    if (localFrame >= maxFrames) {
+      setLocalFrame(Math.max(0, maxFrames - 1));
+    }
+  }, [maxFrames, localFrame]);
 
   // Escala proporcional não-destrutiva baseada no preset canônico
   useEffect(() => {
@@ -276,8 +369,21 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
           );
         }
 
+        // Sincroniza duração de frames se detectada na animação
+        const { detectedFrames, reason } = detectAnimationDurationInFrames(
+          codeToCompile,
+          result.template
+        );
+        if (detectedFrames && detectedFrames > 0) {
+          setMaxFrames(detectedFrames);
+        }
+
         if (notifySuccess) {
-          showToast('Código TSX compilado e aplicado ao vivo no preview!');
+          const durMsg =
+            detectedFrames && detectedFrames >= 180
+              ? ` Duração sincronizada para ${detectedFrames} frames (${(detectedFrames / 30).toFixed(1)}s): ${reason}`
+              : '';
+          showToast(`Código TSX compilado e aplicado ao vivo no preview!${durMsg}`);
         }
       }
     },
@@ -298,7 +404,16 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
     }, 400);
   };
 
-  // Salvar no Registry Local
+  // Sincronização reativa com eventos de criação/exclusão de templates
+  useEffect(() => {
+    const handleTemplatesUpdated = () => {
+      setTemplateListVersion((v) => v + 1);
+    };
+    window.addEventListener('crom:templates-updated', handleTemplatesUpdated);
+    return () => window.removeEventListener('crom:templates-updated', handleTemplatesUpdated);
+  }, []);
+
+  // Salvar no Registry Local e persistir no localStorage
   const handleSaveToRegistry = () => {
     const result = compileTsxTemplate(tsxCode);
     if (result.error) {
@@ -308,32 +423,39 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
     }
 
     if (result.template) {
-      registerTemplate(result.template);
+      saveCustomTemplate(result.template, tsxCode);
       setTemplateListVersion((v) => v + 1);
       setSelectedTemplateId(result.template.id);
       showToast(
-        `Template "${result.template.name}" [${result.template.id}] registrado no catálogo com sucesso!`
+        `Template "${result.template.name}" [${result.template.id}] salvo no catálogo com sucesso!`
       );
     }
   };
 
-  // Salvar como Novo Template (Fork)
+  // Salvar como Novo Template (Fork) persistente
   const handleForkNewTemplate = () => {
     const customId = `custom-${Date.now().toString().slice(-4)}`;
     const customName = `${activeTemplate?.name || 'Template'} Customizado`;
 
-    // Atualiza o ID e nome no código TSX
+    // Atualiza o ID, nome e categoria no código TSX
     let updatedCode = tsxCode
       .replace(/id:\s*['"][^'"]+['"]/, `id: '${customId}'`)
-      .replace(/name:\s*['"][^'"]+['"]/, `name: '${customName}'`);
+      .replace(/name:\s*['"][^'"]+['"]/, `name: '${customName}'`)
+      .replace(/category:\s*['"][^'"]+['"]/, `category: 'Customizados'`);
 
     const result = compileTsxTemplate(updatedCode);
+    if (result.error) {
+      setTsxCompileError(result.error);
+      showToast(`Erro ao criar template: ${result.error}`);
+      return;
+    }
+
     if (result.template) {
-      registerTemplate(result.template);
+      saveCustomTemplate(result.template, updatedCode);
       setTemplateListVersion((v) => v + 1);
       setSelectedTemplateId(result.template.id);
       setTsxCode(updatedCode);
-      showToast(`Novo template criado: "${customName}" [${customId}]`);
+      showToast(`Novo template criado e salvo no catálogo: "${customName}" [${customId}]`);
     } else {
       showToast('Erro ao criar template. Verifique a sintaxe.');
     }
@@ -395,6 +517,30 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
   const IconComp = activeTemplate
     ? TemplateIconMap[activeTemplate.iconName] || Icons.Film
     : Icons.Film;
+
+  // Normaliza props garantindo que objetos de mídia possam ser usados tanto como objeto quanto como string
+  const safeProps = useMemo(() => {
+    const res: Record<string, any> = { ...currentProps };
+    for (const [k, v] of Object.entries(res)) {
+      if (v && typeof v === 'object' && 'url' in v) {
+        if (!v.toString || v.toString() === '[object Object]') {
+          Object.defineProperty(v, 'toString', {
+            value: () => v.url || '',
+            configurable: true,
+            enumerable: false,
+          });
+        }
+        if (!v.valueOf || v.valueOf() === '[object Object]') {
+          Object.defineProperty(v, 'valueOf', {
+            value: () => v.url || '',
+            configurable: true,
+            enumerable: false,
+          });
+        }
+      }
+    }
+    return res;
+  }, [currentProps]);
 
   return (
     <div className="flex flex-col flex-1 max-w-[1700px] w-full mx-auto p-3 sm:p-6 gap-4 sm:gap-6">
@@ -459,6 +605,25 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
             <span className="hidden sm:inline">Baixar .tsx</span>
           </button>
 
+          {isCustomTemplate(activeTemplate?.id) && (
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm(`Deseja realmente excluir o template customizado "${activeTemplate.name}"?`)) {
+                  deleteCustomTemplate(activeTemplate.id);
+                  const remaining = Object.values(CARD_REGISTRY).filter((t) => t.id !== activeTemplate.id);
+                  setSelectedTemplateId(remaining[0]?.id || 'hero-title');
+                  showToast(`Template "${activeTemplate.name}" excluído.`);
+                }
+              }}
+              className="px-2.5 py-2 rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 text-xs font-semibold transition flex items-center gap-1.5"
+              title="Excluir este template customizado"
+            >
+              <Icons.Trash />
+              <span className="hidden sm:inline">Excluir</span>
+            </button>
+          )}
+
           {onBackToStudio && (
             <button
               type="button"
@@ -517,6 +682,8 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
                 <span>{localFrame}f</span>
                 <span>•</span>
                 <span>{(localFrame / 30).toFixed(2)}s</span>
+                <span className="text-slate-500">/</span>
+                <span className="text-slate-400 font-medium">{(maxFrames / 30).toFixed(1)}s</span>
               </div>
             </div>
           </div>
@@ -541,9 +708,11 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
                   '0 25px 50px -12px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08)',
               }}
             >
-              {ComponentToRender && (
-                <ComponentToRender props={currentProps} frame={localFrame} fps={30} />
-              )}
+              <StageErrorBoundary resetKey={`${selectedTemplateId}_${localFrame}`}>
+                {ComponentToRender && (
+                  <ComponentToRender props={safeProps} frame={localFrame} fps={30} />
+                )}
+              </StageErrorBoundary>
             </div>
           </div>
 
@@ -553,8 +722,8 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
               <input
                 type="range"
                 min={0}
-                max={maxFrames - 1}
-                value={localFrame}
+                max={Math.max(0, maxFrames - 1)}
+                value={Math.min(localFrame, maxFrames - 1)}
                 onChange={(e) => setLocalFrame(parseInt(e.target.value, 10) || 0)}
                 className="w-full h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
               />
@@ -604,18 +773,62 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
                 </button>
               </div>
 
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <span>Duração Total:</span>
-                <select
-                  value={maxFrames}
-                  onChange={(e) => setMaxFrames(parseInt(e.target.value, 10) || 90)}
-                  className="bg-slate-800 text-slate-200 border border-slate-700 rounded px-2 py-1 font-mono text-xs cursor-pointer"
+              <div className="flex items-center gap-2 text-xs text-slate-400 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium">Duração:</span>
+                  <select
+                    value={maxFrames}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (val > 0) setMaxFrames(val);
+                    }}
+                    className="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1 font-mono text-xs cursor-pointer focus:border-indigo-500 focus:outline-none"
+                    title="Selecione a duração total de reprodução"
+                  >
+                    {[60, 90, 120, 150, 180, 240, 300, 360, 450, 600].map((f) => (
+                      <option key={f} value={f}>
+                        {f} frames ({(f / 30).toFixed(1)}s)
+                      </option>
+                    ))}
+                    {![60, 90, 120, 150, 180, 240, 300, 360, 450, 600].includes(maxFrames) && (
+                      <option value={maxFrames}>
+                        {maxFrames} frames ({(maxFrames / 30).toFixed(1)}s) [Custom]
+                      </option>
+                    )}
+                  </select>
+                </div>
+
+                {/* Input Numérico Customizado Direto */}
+                <div
+                  className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 py-0.5"
+                  title="Defina o número exato de frames manualmente"
                 >
-                  <option value={60}>60 frames (2.0s)</option>
-                  <option value={90}>90 frames (3.0s)</option>
-                  <option value={120}>120 frames (4.0s)</option>
-                  <option value={180}>180 frames (6.0s)</option>
-                </select>
+                  <input
+                    type="number"
+                    min={15}
+                    max={1800}
+                    step={15}
+                    value={maxFrames}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val) && val > 0) {
+                        setMaxFrames(Math.min(1800, Math.max(15, val)));
+                      }
+                    }}
+                    className="w-12 bg-transparent text-white font-mono text-xs text-right focus:outline-none"
+                  />
+                  <span className="text-[10px] text-slate-500 font-mono">f</span>
+                </div>
+
+                {/* Badge de Animação Longa Detectada */}
+                {maxFrames >= 240 && (
+                  <span
+                    className="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/30"
+                    title="Duração ampliada para acomodar animações ricas e completas"
+                  >
+                    <span>⚡ Completo ({(maxFrames / 30).toFixed(1)}s)</span>
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -728,6 +941,25 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
                   >
                     Restaurar
                   </button>
+
+                  {isCustomTemplate(activeTemplate?.id) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(`Deseja realmente excluir o template customizado "${activeTemplate.name}"?`)) {
+                          deleteCustomTemplate(activeTemplate.id);
+                          const remaining = Object.values(CARD_REGISTRY).filter((t) => t.id !== activeTemplate.id);
+                          setSelectedTemplateId(remaining[0]?.id || 'hero-title');
+                          showToast(`Template "${activeTemplate.name}" excluído.`);
+                        }
+                      }}
+                      className="px-2.5 py-1.5 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+                      title="Excluir este template customizado"
+                    >
+                      <Icons.Trash />
+                      <span>Excluir</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -755,8 +987,10 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
               <div className="text-[11px] text-slate-500 flex items-center justify-between px-1">
                 <span>
                   Dica: Você tem acesso nativo a <code className="text-indigo-400">React</code>,{' '}
+                  <code className="text-indigo-400">MediaRenderer</code>,{' '}
                   <code className="text-indigo-400">spring</code>,{' '}
-                  <code className="text-indigo-400">interpolate</code> e Tailwind CSS.
+                  <code className="text-indigo-400">interpolate</code>,{' '}
+                  <code className="text-indigo-400">Icons</code> e Tailwind CSS.
                 </span>
                 <span>{tsxCode.split('\n').length} linhas</span>
               </div>
@@ -822,10 +1056,22 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
 
                 if (field.type === 'textarea') {
                   return (
-                    <div key={field.name}>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                        {field.label}
-                      </label>
+                    <div key={field.name} className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-semibold text-slate-300">
+                          {field.label}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handlePropChange(field.name, getShortLoremForField(field.name, 'textarea'))
+                          }
+                          className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-indigo-300 transition"
+                          title="Preencher com Lorem Ipsum"
+                        >
+                          Lorem
+                        </button>
+                      </div>
                       <textarea
                         value={val ?? ''}
                         onChange={(e) => handlePropChange(field.name, e.target.value)}
@@ -880,10 +1126,24 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
                 }
 
                 return (
-                  <div key={field.name}>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                      {field.label}
-                    </label>
+                  <div key={field.name} className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-semibold text-slate-300">
+                        {field.label}
+                      </label>
+                      {field.type !== 'number' && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handlePropChange(field.name, getShortLoremForField(field.name, 'text'))
+                          }
+                          className="px-2 py-0.5 text-[10px] font-mono font-semibold rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-indigo-300 transition"
+                          title="Preencher com Lorem Ipsum"
+                        >
+                          Lorem
+                        </button>
+                      )}
+                    </div>
                     <input
                       type={field.type === 'number' ? 'number' : 'text'}
                       value={val ?? ''}

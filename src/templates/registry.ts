@@ -7,13 +7,14 @@ import { glitchCyberTemplate } from './categories/abertura/glitch-cyber';
 import { minimalSplitTemplate } from './categories/abertura/minimal-split';
 import { podcastIntroTemplate } from './categories/abertura/podcast-intro';
 
-// Categoria 2: Mídia & Demonstração (6 templates)
+// Categoria 2: Mídia & Demonstração (7 templates)
 import { mediaSplitShowcaseTemplate } from './categories/midia/media-split-showcase';
 import { videoHeroBgTemplate } from './categories/midia/video-hero-bg';
 import { deviceMockupTemplate } from './categories/midia/device-mockup';
 import { pictureInPictureTemplate } from './categories/midia/picture-in-picture';
 import { beforeAfterMediaTemplate } from './categories/midia/before-after-media';
 import { mediaGalleryShowcaseTemplate } from './categories/midia/media-gallery-showcase';
+import { browserFrameTemplate } from './categories/midia/browser-frame-showcase';
 
 // Categoria 3: Conceitos & Explicações (6 templates)
 import { conceptDefinitionTemplate } from './categories/conceitos/concept-definition';
@@ -30,6 +31,7 @@ import { codeSnippetTemplate } from './categories/arquitetura/code-snippet';
 import { layerStackTemplate } from './categories/arquitetura/layer-stack';
 import { neuralGraphTemplate } from './categories/arquitetura/neural-graph';
 import { systemArchitectureTemplate } from './categories/arquitetura/system-architecture';
+import { deepDiveArchitectureTemplate } from './categories/arquitetura/deep-dive-architecture';
 
 // Categoria 5: Dados, Métricas & Encerramento (7 templates)
 import { comparativeMetricsTemplate } from './categories/metricas/comparative-metrics';
@@ -57,11 +59,15 @@ export function getAllTemplates(): TemplateDefinition[] {
 export function getTemplatesByCategory(category: string): TemplateDefinition[] {
   const all = getAllTemplates();
   if (category === 'Todos') return all;
+  if (category === 'Customizados') {
+    return all.filter((t) => t.id.startsWith('custom-'));
+  }
   return all.filter((t) => t.category === category);
 }
 
 export const TEMPLATE_CATEGORIES = [
   'Todos',
+  'Customizados',
   'Abertura & Título',
   'Mídia & Demonstração',
   'Conceitos & Explicações',
@@ -85,6 +91,7 @@ const ALL_TEMPLATES: TemplateDefinition[] = [
   pictureInPictureTemplate,
   beforeAfterMediaTemplate,
   mediaGalleryShowcaseTemplate,
+  browserFrameTemplate,
 
   // Conceitos & Explicações
   conceptDefinitionTemplate,
@@ -101,6 +108,7 @@ const ALL_TEMPLATES: TemplateDefinition[] = [
   layerStackTemplate,
   neuralGraphTemplate,
   systemArchitectureTemplate,
+  deepDiveArchitectureTemplate,
 
   // Dados, Métricas & Encerramento
   comparativeMetricsTemplate,

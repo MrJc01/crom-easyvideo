@@ -192,6 +192,22 @@ export const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
     </svg>
   ),
+  AlertTriangle: () => (
+    <svg className="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
+    </svg>
+  ),
+  Globe: () => (
+    <svg className="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  ),
 };
 
 export const TemplateIconMap: Record<string, React.FC> = {
@@ -203,4 +219,6 @@ export const TemplateIconMap: Record<string, React.FC> = {
   film: Icons.Film,
   video: Icons.Video,
   image: Icons.Image,
+  globe: Icons.Globe,
+  Globe: Icons.Globe,
 };

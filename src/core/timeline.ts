@@ -4,6 +4,7 @@ import type {
   VideoCard,
   CalculatedCard,
 } from './types';
+import { CARD_REGISTRY } from '../templates/registry';
 
 export function parseScriptAndDelays(rawScript: string, speed: number = 1.0): ParsedScriptResult {
   if (!rawScript || !rawScript.trim()) {
@@ -100,7 +101,17 @@ export function calculateTimeline(
 
       const padding = card.audioPaddingEndInSeconds ?? 0.8;
       totalDurationInSeconds = Math.round((baseAudioDuration + padding) * 10) / 10;
-      durationInFrames = Math.max(30, Math.ceil(totalDurationInSeconds * fps));
+      
+      let minFrames = 30;
+      const def = CARD_REGISTRY[card.templateId];
+      if (def?.minDurationInFrames) {
+        minFrames = Math.max(minFrames, def.minDurationInFrames);
+      } else if (def?.defaultDurationInFrames) {
+        minFrames = Math.max(minFrames, def.defaultDurationInFrames);
+      }
+
+      durationInFrames = Math.max(minFrames, Math.ceil(totalDurationInSeconds * fps));
+      totalDurationInSeconds = Math.max(totalDurationInSeconds, durationInFrames / fps);
     } else {
       if (card.manualDurationInFrames) {
         durationInFrames = Math.max(15, card.manualDurationInFrames);

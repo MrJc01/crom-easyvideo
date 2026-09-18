@@ -7,19 +7,64 @@ export interface MediaFieldEditorProps {
   onChange: (val: MediaAsset) => void;
 }
 
+/**
+ * Cria um MediaAsset com toString() e valueOf() transparentes,
+ * evitando que componentes que usem <img src={props.media} /> quebrem com [object Object].
+ */
+export function createMediaAsset(data: {
+  type: 'image' | 'video';
+  url: string;
+  name?: string;
+  duration?: number;
+  trimStart?: number;
+  trimEnd?: number;
+  objectFit?: 'cover' | 'contain' | 'fill';
+}): MediaAsset {
+  const asset: MediaAsset = {
+    type: data.type,
+    url: data.url,
+    name: data.name,
+    duration: data.duration,
+    trimStart: data.trimStart ?? 0,
+    trimEnd: data.trimEnd ?? 0,
+    objectFit: data.objectFit ?? 'cover',
+  };
+
+  Object.defineProperty(asset, 'toString', {
+    value: function () {
+      return this.url || '';
+    },
+    writable: true,
+    configurable: true,
+    enumerable: false,
+  });
+
+  Object.defineProperty(asset, 'valueOf', {
+    value: function () {
+      return this.url || '';
+    },
+    writable: true,
+    configurable: true,
+    enumerable: false,
+  });
+
+  return asset;
+}
+
 export const MediaFieldEditor: React.FC<MediaFieldEditorProps> = ({ value, onChange }) => {
   const [videoDuration, setVideoDuration] = useState<number>(value?.duration || 10);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentMedia: MediaAsset = useMemo(() => {
     return (
-      value || {
+      value ||
+      createMediaAsset({
         type: 'image',
         url: '',
         trimStart: 0,
         trimEnd: 5,
         objectFit: 'cover',
-      }
+      })
     );
   }, [value]);
 
@@ -36,25 +81,29 @@ export const MediaFieldEditor: React.FC<MediaFieldEditorProps> = ({ value, onCha
       tempVideo.onloadedmetadata = () => {
         const dur = Math.round(tempVideo.duration * 10) / 10 || 10;
         setVideoDuration(dur);
-        onChange({
-          type: 'video',
-          url,
-          name: file.name,
-          duration: dur,
-          trimStart: 0,
-          trimEnd: Math.min(dur, 6),
-          objectFit: 'cover',
-        });
+        onChange(
+          createMediaAsset({
+            type: 'video',
+            url,
+            name: file.name,
+            duration: dur,
+            trimStart: 0,
+            trimEnd: Math.min(dur, 6),
+            objectFit: 'cover',
+          })
+        );
       };
     } else {
-      onChange({
-        type: 'image',
-        url,
-        name: file.name,
-        trimStart: 0,
-        trimEnd: 0,
-        objectFit: 'cover',
-      });
+      onChange(
+        createMediaAsset({
+          type: 'image',
+          url,
+          name: file.name,
+          trimStart: 0,
+          trimEnd: 0,
+          objectFit: 'cover',
+        })
+      );
     }
   };
 
@@ -101,13 +150,15 @@ export const MediaFieldEditor: React.FC<MediaFieldEditorProps> = ({ value, onCha
             </div>
             <button
               onClick={() =>
-                onChange({
-                  type: 'image',
-                  url: '',
-                  trimStart: 0,
-                  trimEnd: 0,
-                  objectFit: 'cover',
-                })
+                onChange(
+                  createMediaAsset({
+                    type: 'image',
+                    url: '',
+                    trimStart: 0,
+                    trimEnd: 0,
+                    objectFit: 'cover',
+                  })
+                )
               }
               className="p-1 text-slate-400 hover:text-rose-400"
               title="Remover mídia"
@@ -141,10 +192,12 @@ export const MediaFieldEditor: React.FC<MediaFieldEditorProps> = ({ value, onCha
                     step={0.1}
                     value={currentMedia.trimStart || 0}
                     onChange={(e) =>
-                      onChange({
-                        ...currentMedia,
-                        trimStart: parseFloat(e.target.value) || 0,
-                      })
+                      onChange(
+                        createMediaAsset({
+                          ...currentMedia,
+                          trimStart: parseFloat(e.target.value) || 0,
+                        })
+                      )
                     }
                     className="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-indigo-500"
                   />
@@ -161,10 +214,12 @@ export const MediaFieldEditor: React.FC<MediaFieldEditorProps> = ({ value, onCha
                     step={0.1}
                     value={currentMedia.trimEnd || Math.min(videoDuration, 10)}
                     onChange={(e) =>
-                      onChange({
-                        ...currentMedia,
-                        trimEnd: parseFloat(e.target.value) || 1,
-                      })
+                      onChange(
+                        createMediaAsset({
+                          ...currentMedia,
+                          trimEnd: parseFloat(e.target.value) || 1,
+                        })
+                      )
                     }
                     className="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-indigo-500"
                   />
@@ -178,10 +233,12 @@ export const MediaFieldEditor: React.FC<MediaFieldEditorProps> = ({ value, onCha
             <select
               value={currentMedia.objectFit}
               onChange={(e) =>
-                onChange({
-                  ...currentMedia,
-                  objectFit: e.target.value as 'cover' | 'contain' | 'fill',
-                })
+                onChange(
+                  createMediaAsset({
+                    ...currentMedia,
+                    objectFit: e.target.value as 'cover' | 'contain' | 'fill',
+                  })
+                )
               }
               className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 text-xs"
             >
@@ -199,14 +256,16 @@ export const MediaFieldEditor: React.FC<MediaFieldEditorProps> = ({ value, onCha
             value={currentMedia.url}
             onChange={(e) => {
               const url = e.target.value;
-              const isVid = /\.(mp4|webm|mov)$/i.test(url);
-              onChange({
-                type: isVid ? 'video' : 'image',
-                url,
-                trimStart: 0,
-                trimEnd: 6,
-                objectFit: 'cover',
-              });
+              const isVid = /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(url);
+              onChange(
+                createMediaAsset({
+                  type: isVid ? 'video' : 'image',
+                  url,
+                  trimStart: 0,
+                  trimEnd: 6,
+                  objectFit: 'cover',
+                })
+              );
             }}
             className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
