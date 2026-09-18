@@ -122,8 +122,8 @@ export default function App() {
       audio: {
         mode: 'tts',
         script: `Apresentamos agora o conceito sobre ${def.name}. [@sleep-1.0] Aprofunde os detalhes no editor.`,
-        voiceId: 'pt-BR-Antonio',
-        provider: 'browser-tts',
+        voiceId: 'pt-BR-AntonioNeural',
+        provider: 'cromyvoice',
         speed: 1.0,
       },
       props: { ...def.defaultProps },

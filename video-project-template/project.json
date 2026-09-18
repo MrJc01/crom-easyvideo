@@ -17,8 +17,8 @@
       "audio": {
         "mode": "tts",
         "script": "Seja bem-vindo a esta apresentação sobre arquitetura de inteligência artificial.",
-        "voiceId": "pt-BR-Antonio",
-        "provider": "browser-tts",
+        "voiceId": "pt-BR-AntonioNeural",
+        "provider": "cromyvoice",
         "speed": 1,
         "audioDurationInSeconds": 5.5
       },
@@ -47,8 +47,8 @@
       "audio": {
         "mode": "tts",
         "script": "Os blocos de atenção realizam projeções lineares no mesmo espaço semântico.",
-        "voiceId": "pt-BR-Francisca",
-        "provider": "browser-tts",
+        "voiceId": "pt-BR-FranciscaNeural",
+        "provider": "cromyvoice",
         "speed": 1,
         "audioDurationInSeconds": 5
       },
@@ -75,8 +75,8 @@
       "audio": {
         "mode": "tts",
         "script": "Alcançamos noventa e nove por cento de acurácia com noventa milissegundos de latência.",
-        "voiceId": "pt-BR-Antonio",
-        "provider": "browser-tts",
+        "voiceId": "pt-BR-AntonioNeural",
+        "provider": "cromyvoice",
         "speed": 1,
         "audioDurationInSeconds": 6
       },
@@ -103,8 +103,8 @@
       "audio": {
         "mode": "tts",
         "script": "Obrigado por assistir. Inscreva-se para acompanhar novas análises técnicas.",
-        "voiceId": "pt-BR-Brenda",
-        "provider": "browser-tts",
+        "voiceId": "pt-BR-BrendaNeural",
+        "provider": "cromyvoice",
         "speed": 1,
         "audioDurationInSeconds": 5
       },

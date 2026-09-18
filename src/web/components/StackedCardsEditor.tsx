@@ -305,7 +305,7 @@ const StackedSceneCard: React.FC<SceneCardProps> = ({
       const voiceId =
         (audioConfig && 'voiceId' in audioConfig && audioConfig.voiceId) ||
         currentCard.tts?.voiceId ||
-        'pt-BR-Antonio';
+        'pt-BR-AntonioNeural';
 
       if (scriptText && scriptText.trim()) {
         isSpeakingRef.current = true;
@@ -328,7 +328,8 @@ const StackedSceneCard: React.FC<SceneCardProps> = ({
               setIsSpeaking(false);
             },
           },
-          voiceId
+          voiceId,
+          (audioConfig && 'provider' in audioConfig && audioConfig.provider) || currentCard.tts?.provider || 'cromyvoice'
         );
       }
     }
@@ -423,7 +424,7 @@ const StackedSceneCard: React.FC<SceneCardProps> = ({
   const tabs = [
     { id: 'template' as const, label: 'Template', icon: Icons.LayoutTemplate },
     { id: 'config' as const, label: 'Configurações', icon: Icons.Settings2 },
-    { id: 'voice' as const, label: 'Voz & Narração', icon: Icons.Mic },
+    { id: 'voice' as const, label: 'Voz (CromyVoice)', icon: Icons.Mic },
   ];
 
   return (

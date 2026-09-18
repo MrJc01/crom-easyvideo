@@ -74,6 +74,49 @@ function generateBeepWav(durationSeconds = 1.0, frequency = 440): Buffer {
   return buffer;
 }
 
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import { execFileSync } from 'child_process';
+
+function normalizeEdgeVoice(voice = 'pt-BR-AntonioNeural'): string {
+  if (!voice) return 'pt-BR-AntonioNeural';
+  if (voice.endsWith('Neural')) return voice;
+  return `${voice}Neural`;
+}
+
+function synthesizeWithCromyvoice(text: string, voice = 'pt-BR-AntonioNeural'): Buffer | null {
+  const cromyBin = path.resolve(process.cwd(), 'bin/cromyvoice');
+  if (!fs.existsSync(cromyBin)) {
+    console.warn('[CromyVoice] Binário bin/cromyvoice não encontrado em', cromyBin);
+    return null;
+  }
+
+  const normVoice = normalizeEdgeVoice(voice);
+  const tempOut = path.join(os.tmpdir(), `cv_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
+  try {
+    console.log(`[Crom TTS] Chamando CromyVoice local | Voz: "${normVoice}" | Texto: "${text.slice(0, 45)}..."`);
+    execFileSync(cromyBin, ['-text', text, '-voice', normVoice, '-out', tempOut], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      timeout: 10000,
+    });
+    if (fs.existsSync(tempOut)) {
+      const buf = fs.readFileSync(tempOut);
+      fs.unlinkSync(tempOut);
+      console.log(`[Crom TTS] ✅ Sucesso CromyVoice (${buf.length} bytes gerados)`);
+      return buf;
+    }
+  } catch (err: any) {
+    console.error(`[Crom TTS] ❌ Erro ao executar binário CromyVoice:`, err?.message || err);
+    if (fs.existsSync(tempOut)) {
+      try {
+        fs.unlinkSync(tempOut);
+      } catch {}
+    }
+  }
+  return null;
+}
+
 const ttsCache = new Map<string, Buffer>();
 
 function ttsApiPlugin(): Plugin {
@@ -86,6 +129,7 @@ function ttsApiPlugin(): Plugin {
             const urlObj = new URL(req.url, 'http://localhost');
             const text = urlObj.searchParams.get('text') || '';
             const lang = urlObj.searchParams.get('lang') || 'pt-BR';
+            const voice = urlObj.searchParams.get('voice') || urlObj.searchParams.get('voiceId') || 'pt-BR-AntonioNeural';
 
             if (!text.trim()) {
               res.statusCode = 400;
@@ -93,7 +137,7 @@ function ttsApiPlugin(): Plugin {
               return;
             }
 
-            const cacheKey = `${lang}:${text}`;
+            const cacheKey = `${voice}:${lang}:${text}`;
             if (ttsCache.has(cacheKey)) {
               const cached = ttsCache.get(cacheKey)!;
               res.setHeader('Content-Type', 'audio/mpeg');
@@ -103,6 +147,18 @@ function ttsApiPlugin(): Plugin {
               return;
             }
 
+            // 1. Prioridade: Binário Local CromyVoice (Edge-TTS Neural)
+            const cromyBuffer = synthesizeWithCromyvoice(text.trim(), voice);
+            if (cromyBuffer && cromyBuffer.length > 0) {
+              ttsCache.set(cacheKey, cromyBuffer);
+              res.setHeader('Content-Type', 'audio/mpeg');
+              res.setHeader('Content-Length', cromyBuffer.length);
+              res.setHeader('Cache-Control', 'public, max-age=86400');
+              res.end(cromyBuffer);
+              return;
+            }
+
+            // 2. Fallback: Google TTS
             const chunks = chunkText(text.trim(), 140);
             const buffers: Buffer[] = [];
 
@@ -138,6 +194,7 @@ function ttsApiPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [react(), ttsApiPlugin()],
+
   server: {
     host: '0.0.0.0',
     port: 5173,

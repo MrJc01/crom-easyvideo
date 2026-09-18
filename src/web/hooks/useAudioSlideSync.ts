@@ -185,7 +185,8 @@ export function useAudioSlideSync({
               setIsAudioHolding(false);
             },
           },
-          voiceId
+          voiceId || 'pt-BR-AntonioNeural',
+          (audioConfig && 'provider' in audioConfig && audioConfig.provider) || card.tts?.provider || 'cromyvoice'
         );
       }
     },

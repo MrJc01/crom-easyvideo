@@ -6,6 +6,13 @@ import {
   playScriptWithSpeechSynthesis,
   stopSpeechSynthesis,
 } from '../../tts/providers/browserTts';
+import {
+  TTS_PROVIDERS,
+  CROMY_VOICES,
+  BROWSER_VOICES,
+  getVoicesForProvider,
+  normalizeVoiceId,
+} from '../../core/voices';
 
 export interface AudioSourceSelectorProps {
   card: VideoCard;
@@ -22,8 +29,8 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
   const audioConfig: CardAudioConfig = card.audio || {
     mode: 'tts',
     script: card.tts?.script || '',
-    voiceId: card.tts?.voiceId || 'pt-BR-Antonio',
-    provider: 'browser-tts',
+    voiceId: card.tts?.voiceId || 'pt-BR-AntonioNeural',
+    provider: (card.tts?.provider as any) || 'cromyvoice',
     speed: card.tts?.speed || 1.0,
     audioDurationInSeconds: card.tts?.audioDurationInSeconds,
   };
@@ -89,8 +96,8 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
           audioConfig.mode === 'tts'
             ? audioConfig.script
             : 'Texto de narração sintetizada.',
-        voiceId: 'pt-BR-Antonio',
-        provider: 'browser-tts',
+        voiceId: 'pt-BR-AntonioNeural',
+        provider: 'cromyvoice',
         speed: 1.0,
       };
       onUpdateCard({
@@ -167,6 +174,33 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
     });
   };
 
+  const handleProviderChange = (newProvider: 'cromyvoice' | 'browser-tts' | 'elevenlabs' | 'openai') => {
+    if (audioConfig.mode !== 'tts') return;
+    const defaultVoice =
+      newProvider === 'cromyvoice'
+        ? 'pt-BR-AntonioNeural'
+        : newProvider === 'browser-tts'
+        ? 'pt-BR-Antonio'
+        : 'pt-BR-AntonioNeural';
+
+    const updatedAudio: CardAudioConfig = {
+      ...audioConfig,
+      provider: newProvider,
+      voiceId: defaultVoice,
+    };
+    onUpdateCard({
+      ...card,
+      audio: updatedAudio,
+      tts: {
+        script: audioConfig.script,
+        voiceId: defaultVoice,
+        provider: newProvider,
+        speed: audioConfig.speed,
+        audioDurationInSeconds: audioConfig.audioDurationInSeconds,
+      },
+    });
+  };
+
   const handleVoiceChange = (newVoice: string) => {
     if (audioConfig.mode !== 'tts') return;
     const updatedAudio: CardAudioConfig = {
@@ -179,8 +213,9 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
       tts: {
         script: audioConfig.script,
         voiceId: newVoice,
-        provider: audioConfig.provider,
+        provider: audioConfig.provider || 'cromyvoice',
         speed: audioConfig.speed,
+        audioDurationInSeconds: audioConfig.audioDurationInSeconds,
       },
     });
   };
@@ -221,8 +256,8 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
             audio: updatedAudio,
             tts: {
               script: audioConfig.script,
-              voiceId: audioConfig.voiceId,
-              provider: audioConfig.provider,
+              voiceId: audioConfig.voiceId || 'pt-BR-AntonioNeural',
+              provider: audioConfig.provider || 'cromyvoice',
               speed: audioConfig.speed,
               audioDurationInSeconds: measured,
             },
@@ -232,7 +267,8 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
           setIsPlayingTTS(false);
         },
       },
-      audioConfig.voiceId
+      audioConfig.voiceId || 'pt-BR-AntonioNeural',
+      audioConfig.provider || 'cromyvoice'
     );
   };
 
@@ -520,36 +556,182 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
             </div>
           </div>
 
-          {/* Configurações de Voz e Velocidade */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Voz do Sistema</label>
-              <select
-                value={audioConfig.voiceId}
-                onChange={(e) => handleVoiceChange(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-              >
-                <option value="pt-BR-Antonio">Antonio (Português - Masculino)</option>
-                <option value="pt-BR-Francisca">Francisca (Português - Feminino)</option>
-                <option value="pt-BR-Brenda">Brenda (Português - Jovem)</option>
-              </select>
+          {/* ============================================================= */}
+          {/* SELETOR DE MOTOR / PROVEDOR DE VOZ (CROMYVOICE DESTACADO)     */}
+          {/* ============================================================= */}
+          <div className="space-y-2.5 pt-2 border-t border-slate-900">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Icons.Sliders />
+                <span>Motor de Síntese de Voz</span>
+              </label>
+              <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950/80 border border-emerald-800/80 px-2 py-0.5 rounded-full font-bold">
+                {(audioConfig.provider || 'cromyvoice') === 'cromyvoice' ? '⚡ CromyVoice Neural Ativo' : audioConfig.provider}
+              </span>
             </div>
 
-            <div>
-              <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-                <span>Velocidade</span>
-                <span className="font-mono text-indigo-400 font-bold">{audioConfig.speed}x</span>
-              </div>
-              <input
-                type="range"
-                min="0.6"
-                max="1.6"
-                step="0.1"
-                value={audioConfig.speed}
-                onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
-                className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-              />
+            {/* Grid de Provedores com CromyVoice em Primeiro e Destacado */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {TTS_PROVIDERS.map((p) => {
+                const isSelected = (audioConfig.provider || 'cromyvoice') === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleProviderChange(p.id)}
+                    className={`p-2.5 rounded-xl text-left transition border flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-indigo-950/70 border-indigo-500 text-white shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/50'
+                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-900 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-xs font-bold truncate">{p.name}</span>
+                      {p.id === 'cromyvoice' && (
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Motor Local de Alta Fidelidade" />
+                      )}
+                    </div>
+                    <span className={`text-[10px] font-mono block ${isSelected ? 'text-indigo-300 font-semibold' : 'text-slate-500'}`}>
+                      {p.badge}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
+
+            {/* Banner Informativo CromyVoice */}
+            {(audioConfig.provider === 'cromyvoice' || !audioConfig.provider) && (
+              <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-indigo-950/40 border border-indigo-800/60 text-xs text-indigo-200 flex items-start gap-2.5">
+                <div className="w-6 h-6 rounded-lg bg-indigo-600/30 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 border border-indigo-500/40">
+                  <Icons.Sparkles />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white">CromyVoice Neural Nativo (Local)</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+                      14 Vozes Neurais
+                    </span>
+                  </div>
+                  <p className="text-slate-300 text-[11px] leading-relaxed">
+                    Vozes neurais de alta fidelidade sintetizadas localmente sem custos de API externa, latência ou limites de requisição.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ============================================================= */}
+          {/* SELETOR DE VOZ E VELOCIDADE                                   */}
+          {/* ============================================================= */}
+          <div className="space-y-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1.5">
+                  {(audioConfig.provider || 'cromyvoice') === 'cromyvoice'
+                    ? 'Voz Neural CromyVoice'
+                    : 'Voz do Provedor'}
+                </label>
+
+                {(audioConfig.provider || 'cromyvoice') === 'cromyvoice' ? (
+                  <select
+                    value={audioConfig.voiceId || 'pt-BR-AntonioNeural'}
+                    onChange={(e) => handleVoiceChange(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 font-sans"
+                  >
+                    <optgroup label="Português do Brasil (9 Vozes Neurais)">
+                      {CROMY_VOICES.filter((v) => v.lang === 'pt-BR').map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} ({v.gender}){v.recommended ? ' ★ Recomendado' : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="English US (3 Neural Voices)">
+                      {CROMY_VOICES.filter((v) => v.lang === 'en-US').map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} ({v.gender})
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Español (2 Voces Neurales)">
+                      {CROMY_VOICES.filter((v) => v.lang === 'es-ES').map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} ({v.gender})
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                ) : (
+                  <select
+                    value={audioConfig.voiceId}
+                    onChange={(e) => handleVoiceChange(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 font-sans"
+                  >
+                    {getVoicesForProvider(audioConfig.provider || 'browser-tts').map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.name} ({v.gender})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] font-semibold text-slate-300 mb-1.5">
+                  <span>Velocidade de Fala</span>
+                  <span className="font-mono text-indigo-400 font-bold">{audioConfig.speed}x</span>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="range"
+                    min="0.6"
+                    max="1.6"
+                    step="0.1"
+                    value={audioConfig.speed}
+                    onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                    className="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSpeedChange(1.0)}
+                    className="px-2 py-1 text-[10px] font-mono rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition"
+                    title="Redefinir para 1.0x"
+                  >
+                    1.0x
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Cartão de Detalhes da Voz Selecionada */}
+            {(() => {
+              const currentVoice =
+                CROMY_VOICES.find(
+                  (v) => v.id === audioConfig.voiceId || v.id.startsWith(audioConfig.voiceId || '')
+                ) || CROMY_VOICES[0];
+              return (
+                <div className="p-3 bg-slate-900/80 border border-slate-800/80 rounded-xl space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white">{currentVoice.name}</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800/60 font-medium">
+                        {currentVoice.gender}
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                        {currentVoice.lang}
+                      </span>
+                    </div>
+                    {currentVoice.recommended && (
+                      <span className="text-[10px] font-semibold text-amber-300 bg-amber-950/80 border border-amber-800/80 px-2 py-0.5 rounded-full">
+                        ★ Recomendado
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    {currentVoice.description}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
 
           {ttsMeasuredSeconds && (

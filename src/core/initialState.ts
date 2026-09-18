@@ -20,16 +20,16 @@ export const INITIAL_PROJECT_STATE: ProjectState = {
         mode: 'tts',
         script:
           'Como funcionam os modelos de linguagem de grande escala? [@sleep-0.6] Conheça os fundamentos e a matemática dos Transformers.',
-        voiceId: 'pt-BR-Antonio',
-        provider: 'browser-tts',
+        voiceId: 'pt-BR-AntonioNeural',
+        provider: 'cromyvoice',
         speed: 1.0,
         audioDurationInSeconds: 7.2,
       },
       tts: {
         script:
           'Como funcionam os modelos de linguagem de grande escala? [@sleep-0.6] Conheça os fundamentos e a matemática dos Transformers.',
-        voiceId: 'pt-BR-Antonio',
-        provider: 'browser-tts',
+        voiceId: 'pt-BR-AntonioNeural',
+        provider: 'cromyvoice',
         speed: 1.0,
         audioDurationInSeconds: 7.2,
       },
@@ -55,16 +55,16 @@ export const INITIAL_PROJECT_STATE: ProjectState = {
         mode: 'tts',
         script:
           'A inferência multimodal processa texto e visão em tempo real, projetando dados no mesmo espaço vetorial semântico.',
-        voiceId: 'pt-BR-Francisca',
-        provider: 'browser-tts',
+        voiceId: 'pt-BR-FranciscaNeural',
+        provider: 'cromyvoice',
         speed: 1.0,
         audioDurationInSeconds: 6.5,
       },
       tts: {
         script:
           'A inferência multimodal processa texto e visão em tempo real, projetando dados no mesmo espaço vetorial semântico.',
-        voiceId: 'pt-BR-Francisca',
-        provider: 'browser-tts',
+        voiceId: 'pt-BR-FranciscaNeural',
+        provider: 'cromyvoice',
         speed: 1.0,
         audioDurationInSeconds: 6.5,
       },
@@ -98,16 +98,16 @@ export const INITIAL_PROJECT_STATE: ProjectState = {
         mode: 'tts',
         script:
           'Redes neurais profundas calculam probabilidades contextuais para prever a próxima palavra com alta precisão estatística.',
-        voiceId: 'pt-BR-Antonio',
-        provider: 'browser-tts',
+        voiceId: 'pt-BR-AntonioNeural',
+        provider: 'cromyvoice',
         speed: 1.0,
         audioDurationInSeconds: 6.4,
       },
       tts: {
         script:
           'Redes neurais profundas calculam probabilidades contextuais para prever a próxima palavra com alta precisão estatística.',
-        voiceId: 'pt-BR-Antonio',
-        provider: 'browser-tts',
+        voiceId: 'pt-BR-AntonioNeural',
+        provider: 'cromyvoice',
         speed: 1.0,
         audioDurationInSeconds: 6.4,
       },

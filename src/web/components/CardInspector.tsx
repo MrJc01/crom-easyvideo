@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { CalculatedCard, VideoCard, TransitionType, CardAudioConfig, TTSAudioConfig } from '../../core/types';
 import { Icons } from '../../core/icons';
 import { CARD_REGISTRY } from '../../templates/registry';
@@ -7,6 +7,11 @@ import { getShortLoremForField } from '../../core/lorem';
 import { MediaFieldEditor } from './MediaFieldEditor';
 import { DynamicArrayField } from './DynamicArrayField';
 import { AudioSourceSelector } from './AudioSourceSelector';
+import {
+  playScriptWithSpeechSynthesis,
+  stopSpeechSynthesis,
+} from '../../tts/providers/browserTts';
+import { CROMY_VOICES } from '../../core/voices';
 
 export interface CardInspectorProps {
   card: CalculatedCard | null;
@@ -18,13 +23,16 @@ export const CardInspector: React.FC<CardInspectorProps> = ({ card, onUpdateCard
   const [activeTab, setActiveTab] = useState<'content' | 'timing' | 'voice'>('content');
   const [isPlayingScript, setIsPlayingScript] = useState<boolean>(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const scriptCleanupRef = useRef<(() => void) | null>(null);
 
   // Cancela qualquer narração de áudio ao trocar de cena ou desmontar
   useEffect(() => {
     return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+      if (scriptCleanupRef.current) {
+        scriptCleanupRef.current();
+        scriptCleanupRef.current = null;
       }
+      stopSpeechSynthesis();
       setIsPlayingScript(false);
     };
   }, [card?.id]);
@@ -68,10 +76,16 @@ export const CardInspector: React.FC<CardInspectorProps> = ({ card, onUpdateCard
     });
   };
 
+  const currentVoiceId =
+    (card.audio && 'voiceId' in card.audio && card.audio.voiceId) ||
+    card.tts?.voiceId ||
+    'pt-BR-AntonioNeural';
+
   const handleScriptChange = (newScript: string) => {
     const prevTts = card.audio?.mode === 'tts' ? card.audio : null;
-    const voiceId = prevTts?.voiceId || card.tts?.voiceId || 'pt-BR-Antonio';
-    const provider = (prevTts?.provider || card.tts?.provider || 'browser-tts') as
+    const voiceId = prevTts?.voiceId || card.tts?.voiceId || 'pt-BR-AntonioNeural';
+    const provider = (prevTts?.provider || card.tts?.provider || 'cromyvoice') as
+      | 'cromyvoice'
       | 'browser-tts'
       | 'elevenlabs'
       | 'openai';
@@ -98,10 +112,41 @@ export const CardInspector: React.FC<CardInspectorProps> = ({ card, onUpdateCard
     });
   };
 
+  const handleVoiceChange = (newVoice: string) => {
+    const prevTts = card.audio?.mode === 'tts' ? card.audio : null;
+    const provider = (prevTts?.provider || card.tts?.provider || 'cromyvoice') as
+      | 'cromyvoice'
+      | 'browser-tts'
+      | 'elevenlabs'
+      | 'openai';
+    const speed = prevTts?.speed || card.tts?.speed || 1.0;
+
+    const updatedAudio: TTSAudioConfig = {
+      mode: 'tts',
+      script: scriptText,
+      voiceId: newVoice,
+      provider,
+      speed,
+      audioDurationInSeconds: prevTts?.audioDurationInSeconds,
+    };
+
+    onUpdateCard({
+      ...card,
+      audio: updatedAudio,
+      tts: {
+        script: scriptText,
+        voiceId: newVoice,
+        provider,
+        speed,
+      },
+    });
+  };
+
   const handleSpeedChange = (newSpeed: number) => {
     const prevTts = card.audio?.mode === 'tts' ? card.audio : null;
-    const voiceId = prevTts?.voiceId || card.tts?.voiceId || 'pt-BR-Antonio';
-    const provider = (prevTts?.provider || card.tts?.provider || 'browser-tts') as
+    const voiceId = prevTts?.voiceId || card.tts?.voiceId || 'pt-BR-AntonioNeural';
+    const provider = (prevTts?.provider || card.tts?.provider || 'cromyvoice') as
+      | 'cromyvoice'
       | 'browser-tts'
       | 'elevenlabs'
       | 'openai';
@@ -144,43 +189,35 @@ export const CardInspector: React.FC<CardInspectorProps> = ({ card, onUpdateCard
   };
 
   const handleTogglePlayScript = () => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert('Síntese de voz não suportada neste navegador.');
-      return;
-    }
-
     if (isPlayingScript) {
-      window.speechSynthesis.cancel();
+      if (scriptCleanupRef.current) {
+        scriptCleanupRef.current();
+        scriptCleanupRef.current = null;
+      }
+      stopSpeechSynthesis();
       setIsPlayingScript(false);
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const segments = parsedScript.segments;
-    if (!segments || segments.length === 0) return;
+    if (!scriptText.trim()) return;
 
     setIsPlayingScript(true);
-    let index = 0;
+    const currentProvider =
+      (card?.audio && 'provider' in card.audio && card.audio.provider) ||
+      card?.tts?.provider ||
+      'cromyvoice';
 
-    const playNext = () => {
-      if (index >= segments.length) {
-        setIsPlayingScript(false);
-        return;
-      }
-      const seg = segments[index++];
-      if (seg.type === 'sleep') {
-        setTimeout(playNext, (seg.sleepDuration || 1) * 1000);
-      } else {
-        const utterance = new SpeechSynthesisUtterance(seg.text || '');
-        utterance.rate = scriptSpeed;
-        utterance.lang = 'pt-BR';
-        utterance.onend = () => playNext();
-        utterance.onerror = () => setIsPlayingScript(false);
-        window.speechSynthesis.speak(utterance);
-      }
-    };
-
-    playNext();
+    scriptCleanupRef.current = playScriptWithSpeechSynthesis(
+      scriptText,
+      scriptSpeed,
+      {
+        onStart: () => setIsPlayingScript(true),
+        onEnd: () => setIsPlayingScript(false),
+        onError: () => setIsPlayingScript(false),
+      },
+      currentVoiceId,
+      currentProvider
+    );
   };
 
   const handleAutoFillFromScript = () => {
@@ -292,7 +329,7 @@ export const CardInspector: React.FC<CardInspectorProps> = ({ card, onUpdateCard
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            Áudio Avançado
+            <span>Voz (CromyVoice)</span>
           </button>
         </div>
       </div>
@@ -409,6 +446,50 @@ export const CardInspector: React.FC<CardInspectorProps> = ({ card, onUpdateCard
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Seletor Rápido de Voz CromyVoice no Tab de Roteiro */}
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-900/80 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold flex items-center gap-1">
+                    <span>⚡ CromyVoice</span>
+                  </span>
+                  <select
+                    value={currentVoiceId}
+                    onChange={(e) => handleVoiceChange(e.target.value)}
+                    className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-indigo-500 font-sans cursor-pointer"
+                    title="Selecione a voz neural CromyVoice para esta cena"
+                  >
+                    <optgroup label="Português do Brasil (9 Vozes Neurais)">
+                      {CROMY_VOICES.filter((v) => v.lang === 'pt-BR').map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} ({v.gender}){v.recommended ? ' ★' : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="English US (3 Neural Voices)">
+                      {CROMY_VOICES.filter((v) => v.lang === 'en-US').map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Español (2 Voces Neurales)">
+                      {CROMY_VOICES.filter((v) => v.lang === 'es-ES').map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('voice')}
+                  className="text-[10px] text-indigo-400 hover:text-indigo-300 underline font-mono ml-auto"
+                >
+                  Configurações de Áudio & Provedor →
+                </button>
               </div>
             </div>
 

@@ -46,10 +46,11 @@ export interface TTSAudioConfig {
   mode: 'tts';
   script: string;
   voiceId: string;
-  provider: 'browser-tts' | 'elevenlabs' | 'openai';
+  provider: 'cromyvoice' | 'browser-tts' | 'elevenlabs' | 'openai';
   speed: number;
   audioDurationInSeconds?: number;
 }
+
 
 export interface FileAudioConfig {
   mode: 'file';

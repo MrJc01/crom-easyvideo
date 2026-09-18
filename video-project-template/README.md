@@ -46,12 +46,21 @@ O agente lista as vozes neurais suportadas para escolher o narrador ideal de cad
 npm run cli -- voices
 ```
 
-**Vozes Mais Utilizadas:**
-- `pt-BR-Antonio`: Masculina, natural e calorosa (tutoriais, explicações técnicas).
-- `pt-BR-Francisca`: Feminina, formal e polida (institucional, apresentações).
-- `pt-BR-Brenda`: Feminina, ágil e jovem (shorts, reels, produtos).
+**Vozes Neurais Nativas (Motor CromyVoice Integrado):**
+- `pt-BR-AntonioNeural`: Masculina, natural e calorosa (tutoriais, explicações técnicas).
+- `pt-BR-FranciscaNeural`: Feminina, formal e polida (institucional, negócios).
+- `pt-BR-BrendaNeural`: Feminina, ágil e jovem (shorts, reels, produtos).
+- `pt-BR-DonatoNeural`: Masculina, grave e cinematográfica (documentários).
+- `pt-BR-ElzaNeural`: Feminina, suave e explicativa (aulas, conceitos).
+- `pt-BR-FabioNeural`: Masculina, jovem e dinâmica (redes sociais).
+- `pt-BR-NicolauNeural`: Masculina clássica e ponderada.
+- `pt-BR-ValerioNeural`: Masculina firme e assertiva.
+- `pt-BR-YaraNeural`: Feminina brilhante e energética.
+- `en-US-GuyNeural`, `en-US-JennyNeural`, `en-US-AriaNeural`: Inglês americano.
+- `es-ES-AlvaroNeural`, `es-ES-ElviraNeural`: Espanhol.
 
 ---
+
 
 ### Passo 3: Preencher ou Modificar o `project.json`
 O agente edita o arquivo [`project.json`](./project.json) definindo o array `cards`:
@@ -73,7 +82,8 @@ O agente edita o arquivo [`project.json`](./project.json) definindo o array `car
       "audio": {
         "mode": "tts",
         "script": "Texto exato que a voz irá narrar nesta cena.",
-        "voiceId": "pt-BR-Antonio",
+        "voiceId": "pt-BR-AntonioNeural",
+        "provider": "cromyvoice",
         "speed": 1.0
       },
       "transition": {

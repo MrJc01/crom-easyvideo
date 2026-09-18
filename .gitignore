@@ -1,3 +1,5 @@
 node_modules
 dist
 .DS_Store
+meus_videos
+meus_videos/*

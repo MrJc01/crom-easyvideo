@@ -1,7 +1,8 @@
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import os from 'os';
+import { execSync, execFileSync } from 'child_process';
 import { chromium } from 'playwright';
 import { CARD_REGISTRY, getAllTemplates } from '../templates/registry';
 import { calculateTimeline } from '../core/timeline';
@@ -46,7 +47,7 @@ function getFfmpegPath(): string {
 }
 
 /**
- * Sintetiza ou recupera o buffer de áudio de um card
+ * Sintetiza ou recupera o buffer de áudio de um card via CromyVoice ou fallback
  */
 async function getCardAudioBuffer(
   card: CalculatedCard,
@@ -54,12 +55,35 @@ async function getCardAudioBuffer(
   devUrl: string
 ): Promise<{ buffer: Buffer; ext: string } | null> {
   const script = (card.audio && 'script' in card.audio && card.audio.script) || card.tts?.script;
-  const voiceId = (card.audio && 'voiceId' in card.audio && card.audio.voiceId) || card.tts?.voiceId || 'pt-BR-Antonio';
+  const voiceId = (card.audio && 'voiceId' in card.audio && card.audio.voiceId) || card.tts?.voiceId || 'pt-BR-AntonioNeural';
   const lang = voiceId.startsWith('en') ? 'en-US' : voiceId.startsWith('es') ? 'es-ES' : 'pt-BR';
 
   // 1. Áudio TTS Sintetizado
   if (script && (!card.audio || card.audio.mode === 'tts' || !card.audio.mode)) {
-    const ttsUrl = `${devUrl}api/tts?text=${encodeURIComponent(script)}&lang=${lang}`;
+    // 1.1 Prioridade: Binário Local CromyVoice
+    const cromyBin = path.resolve(process.cwd(), 'bin/cromyvoice');
+    if (fs.existsSync(cromyBin)) {
+      const edgeVoice = voiceId.endsWith('Neural') ? voiceId : `${voiceId}Neural`;
+      const tempOut = path.join(os.tmpdir(), `cli_cv_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
+      try {
+        execFileSync(cromyBin, ['-text', script, '-voice', edgeVoice, '-out', tempOut], {
+          stdio: ['ignore', 'ignore', 'ignore'],
+          timeout: 15000,
+        });
+        if (fs.existsSync(tempOut)) {
+          const buf = fs.readFileSync(tempOut);
+          fs.unlinkSync(tempOut);
+          return { buffer: buf, ext: 'mp3' };
+        }
+      } catch {
+        if (fs.existsSync(tempOut)) {
+          try { fs.unlinkSync(tempOut); } catch {}
+        }
+      }
+    }
+
+    // 1.2 Fallback via Dev Server /api/tts
+    const ttsUrl = `${devUrl}api/tts?text=${encodeURIComponent(script)}&lang=${lang}&voice=${encodeURIComponent(voiceId)}`;
     try {
       const res = await fetch(ttsUrl);
       if (res.ok) {
@@ -70,6 +94,7 @@ async function getCardAudioBuffer(
       console.warn(`[Aviso Áudio] Falha ao obter áudio TTS para [${card.id}]:`, e);
     }
   }
+
 
   // 2. Arquivo de Áudio Carregado ou Gravado
   if (card.audio && 'audioUrl' in card.audio && typeof card.audio.audioUrl === 'string') {
@@ -193,70 +218,119 @@ function resolveProjectPath(workspacePath: string): string {
  */
 const AVAILABLE_VOICES = [
   {
-    id: 'pt-BR-Antonio',
-    name: 'Antonio',
+    id: 'pt-BR-AntonioNeural',
+    name: 'Antonio (Neural)',
     lang: 'pt-BR',
     gender: 'Masculino',
-    description: 'Voz natural e calorosa em português brasileiro. Ideal para tutoriais e tecnologia.',
+    description: 'Voz natural e calorosa em português brasileiro. Excelente para tutoriais, tecnologia e apresentações.',
     recommended: true,
   },
   {
-    id: 'pt-BR-Francisca',
-    name: 'Francisca',
+    id: 'pt-BR-FranciscaNeural',
+    name: 'Francisca (Neural)',
     lang: 'pt-BR',
     gender: 'Feminino',
-    description: 'Voz neural corporativa clara e polida. Excelente para apresentações institucionais.',
+    description: 'Voz neural corporativa clara e polida. Excelente para vídeos institucionais e negócios.',
     recommended: true,
   },
   {
-    id: 'pt-BR-Brenda',
-    name: 'Brenda',
+    id: 'pt-BR-BrendaNeural',
+    name: 'Brenda (Neural)',
     lang: 'pt-BR',
     gender: 'Feminino',
     description: 'Voz jovem, ágil e expressiva. Perfeita para shorts, reels e produtos modernos.',
     recommended: true,
   },
   {
-    id: 'pt-BR-Donato',
-    name: 'Donato',
+    id: 'pt-BR-DonatoNeural',
+    name: 'Donato (Neural)',
     lang: 'pt-BR',
     gender: 'Masculino',
-    description: 'Voz grave, solene e cinematográfica. Ideal para documentários e deep dives.',
+    description: 'Voz grave, solene e cinematográfica. Ideal para documentários e análises profundas.',
     recommended: false,
   },
   {
-    id: 'pt-BR-Elza',
-    name: 'Elza',
+    id: 'pt-BR-ElzaNeural',
+    name: 'Elza (Neural)',
     lang: 'pt-BR',
     gender: 'Feminino',
-    description: 'Voz suave, pausada e explicativa. Ideal para conceitos complexos.',
+    description: 'Voz suave, pausada e explicativa. Ideal para conceitos complexos e aulas.',
     recommended: false,
   },
   {
-    id: 'en-US-Guy',
-    name: 'Guy',
+    id: 'pt-BR-FabioNeural',
+    name: 'Fabio (Neural)',
+    lang: 'pt-BR',
+    gender: 'Masculino',
+    description: 'Voz masculina dinâmica e descontraída. Ótima para redes sociais.',
+    recommended: false,
+  },
+  {
+    id: 'pt-BR-NicolauNeural',
+    name: 'Nicolau (Neural)',
+    lang: 'pt-BR',
+    gender: 'Masculino',
+    description: 'Voz clássica, madura e equilibrada.',
+    recommended: false,
+  },
+  {
+    id: 'pt-BR-ValerioNeural',
+    name: 'Valerio (Neural)',
+    lang: 'pt-BR',
+    gender: 'Masculino',
+    description: 'Voz firme, assertiva e confiante.',
+    recommended: false,
+  },
+  {
+    id: 'pt-BR-YaraNeural',
+    name: 'Yara (Neural)',
+    lang: 'pt-BR',
+    gender: 'Feminino',
+    description: 'Voz jovem, nítida, brilhante e energética.',
+    recommended: false,
+  },
+  {
+    id: 'en-US-GuyNeural',
+    name: 'Guy (US Neural)',
     lang: 'en-US',
     gender: 'Male',
     description: 'Voz masculina em inglês americano para vídeos internacionais.',
     recommended: false,
   },
   {
-    id: 'en-US-Jenny',
-    name: 'Jenny',
+    id: 'en-US-JennyNeural',
+    name: 'Jenny (US Neural)',
     lang: 'en-US',
     gender: 'Female',
     description: 'Voz feminina natural em inglês americano.',
     recommended: false,
   },
   {
-    id: 'es-ES-Alvaro',
-    name: 'Alvaro',
+    id: 'en-US-AriaNeural',
+    name: 'Aria (US Neural)',
+    lang: 'en-US',
+    gender: 'Female',
+    description: 'Voz feminina altamente expressiva para vídeos dinâmicos em inglês.',
+    recommended: false,
+  },
+  {
+    id: 'es-ES-AlvaroNeural',
+    name: 'Alvaro (ES Neural)',
     lang: 'es-ES',
     gender: 'Masculino',
     description: 'Voz em espanhol neutro para alcance hispanofalante.',
     recommended: false,
   },
+  {
+    id: 'es-ES-ElviraNeural',
+    name: 'Elvira (ES Neural)',
+    lang: 'es-ES',
+    gender: 'Feminino',
+    description: 'Voz feminina elegante em espanhol europeu.',
+    recommended: false,
+  },
 ];
+
 
 /**
  * COMANDO: voices
@@ -290,7 +364,8 @@ program
           audio: {
             mode: 'tts',
             script: 'Texto que a voz irá narrar nesta cena.',
-            voiceId: 'pt-BR-Antonio',
+            voiceId: 'pt-BR-AntonioNeural',
+            provider: 'cromyvoice',
             speed: 1.0,
           },
         },
@@ -383,7 +458,8 @@ program
       audio: {
         mode: 'tts',
         script: 'Narração falada para esta cena.',
-        voiceId: 'pt-BR-Antonio',
+        voiceId: 'pt-BR-AntonioNeural',
+        provider: 'cromyvoice',
         speed: 1.0,
       },
       props: def.defaultProps,
@@ -431,8 +507,8 @@ program
             audio: {
               mode: 'tts',
               script: 'Seja bem-vindo a esta apresentação sobre arquitetura de inteligência artificial.',
-              voiceId: 'pt-BR-Antonio',
-              provider: 'browser-tts',
+              voiceId: 'pt-BR-AntonioNeural',
+              provider: 'cromyvoice',
               speed: 1.0,
               audioDurationInSeconds: 5.5,
             },
@@ -461,8 +537,8 @@ program
             audio: {
               mode: 'tts',
               script: 'Os blocos de atenção realizam projeções lineares no mesmo espaço semântico.',
-              voiceId: 'pt-BR-Francisca',
-              provider: 'browser-tts',
+              voiceId: 'pt-BR-FranciscaNeural',
+              provider: 'cromyvoice',
               speed: 1.0,
               audioDurationInSeconds: 5.0,
             },
@@ -489,8 +565,8 @@ program
             audio: {
               mode: 'tts',
               script: 'Alcançamos noventa e nove por cento de acurácia com noventa milissegundos de latência.',
-              voiceId: 'pt-BR-Antonio',
-              provider: 'browser-tts',
+              voiceId: 'pt-BR-AntonioNeural',
+              provider: 'cromyvoice',
               speed: 1.0,
               audioDurationInSeconds: 6.0,
             },
@@ -517,8 +593,8 @@ program
             audio: {
               mode: 'tts',
               script: 'Obrigado por assistir. Inscreva-se para acompanhar novas análises técnicas.',
-              voiceId: 'pt-BR-Brenda',
-              provider: 'browser-tts',
+              voiceId: 'pt-BR-BrendaNeural',
+              provider: 'cromyvoice',
               speed: 1.0,
               audioDurationInSeconds: 5.0,
             },

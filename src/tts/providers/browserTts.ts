@@ -9,18 +9,20 @@ export class BrowserTTSProvider implements ITTSProvider {
 
   async synthesize(
     script: string,
-    _voiceId: string,
+    voiceId: string = 'pt-BR-AntonioNeural',
     speed: number = 1.0,
     _outputPath?: string
   ): Promise<{ audioUrl: string; durationInSeconds: number }> {
     const parsed = parseScriptAndDelays(script, speed);
-    const audioUrl = `/api/tts?text=${encodeURIComponent(script)}&lang=pt-BR`;
+    const voiceParam = voiceId ? `&voice=${encodeURIComponent(voiceId)}` : '';
+    const audioUrl = `/api/tts?text=${encodeURIComponent(script)}&lang=pt-BR${voiceParam}`;
     return {
       audioUrl,
       durationInSeconds: parsed.totalDurationSeconds,
     };
   }
 }
+
 
 export const browserTtsProvider = new BrowserTTSProvider();
 
@@ -111,7 +113,8 @@ export function playScriptWithSpeechSynthesis(
     onEnd?: () => void;
     onError?: (err?: unknown) => void;
   },
-  voiceId?: string
+  voiceId?: string,
+  provider: string = 'cromyvoice'
 ): () => void {
   stopSpeechSynthesis();
 
@@ -159,14 +162,19 @@ export function playScriptWithSpeechSynthesis(
   const playWithAudioApi = (text: string, onDone: () => void) => {
     if (isCancelled) return;
     try {
-      const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=pt-BR`);
+      const actualVoice = voiceId || 'pt-BR-AntonioNeural';
+      const voiceParam = `&voice=${encodeURIComponent(actualVoice)}`;
+      const langParam = actualVoice.startsWith('en') ? 'en-US' : actualVoice.startsWith('es') ? 'es-ES' : 'pt-BR';
+      const audio = new Audio(`/api/tts?text=${encodeURIComponent(text)}&lang=${langParam}${voiceParam}`);
       activeAudioElement = audio;
+
       audio.playbackRate = Math.max(0.5, Math.min(2.0, speed));
       audio.onended = () => {
         if (activeAudioElement === audio) activeAudioElement = null;
         if (!isCancelled) onDone();
       };
-      audio.onerror = () => {
+      audio.onerror = (err) => {
+        console.warn('[Crom TTS] Falha ao carregar áudio do CromyVoice, acionando sintetizador Web Audio:', err);
         if (activeAudioElement === audio) activeAudioElement = null;
         playWebAudioBeep(text, speed, () => {
           if (!isCancelled) onDone();
@@ -207,12 +215,24 @@ export function playScriptWithSpeechSynthesis(
         return;
       }
 
+      // Prioridade 1: Se o provedor for CromyVoice (padrão) ou qualquer voz Neural, sintetiza diretamente com o motor CromyVoice
+      const isCromy =
+        provider === 'cromyvoice' ||
+        !provider ||
+        voiceId?.includes('Neural') ||
+        provider !== 'browser-tts';
+
+      if (isCromy) {
+        playWithAudioApi(text, playNextSegment);
+        return;
+      }
+
+      // Provedor browser-tts explícito: usa Web Speech API se disponível
       const availableVoices =
         typeof window !== 'undefined' && isSpeechSynthesisSupported()
           ? window.speechSynthesis.getVoices()
           : [];
 
-      // Se não há vozes nativas no navegador (ex: Chrome no Linux), usa a API de áudio direto
       if (availableVoices.length === 0) {
         playWithAudioApi(text, playNextSegment);
         return;

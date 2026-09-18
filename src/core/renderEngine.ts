@@ -1,6 +1,7 @@
 import type { ProjectState, CalculatedCard } from './types';
 import { CARD_REGISTRY } from '../templates/registry';
 import { spring } from './animations';
+import { normalizeVoiceId } from './voices';
 
 export interface PlatformPreset {
   id: string;
@@ -476,15 +477,16 @@ export async function renderProjectToVideo(
       for (let i = 0; i < calculatedCards.length; i++) {
         const c = calculatedCards[i];
         const script = (c.audio && 'script' in c.audio && c.audio.script) || c.tts?.script;
-        const voiceId = (c.audio && 'voiceId' in c.audio && c.audio.voiceId) || c.tts?.voiceId || 'pt-BR-Antonio';
-        const lang = voiceId.startsWith('en') ? 'en-US' : voiceId.startsWith('es') ? 'es-ES' : 'pt-BR';
+        const voiceId = (c.audio && 'voiceId' in c.audio && c.audio.voiceId) || c.tts?.voiceId || 'pt-BR-AntonioNeural';
+        const normVoice = normalizeVoiceId(voiceId);
+        const lang = normVoice.startsWith('en') ? 'en-US' : normVoice.startsWith('es') ? 'es-ES' : 'pt-BR';
         let audioUrl: string | null =
           c.audio && 'audioUrl' in c.audio && typeof c.audio.audioUrl === 'string'
             ? c.audio.audioUrl
             : null;
 
         if (!audioUrl && script) {
-          audioUrl = `/api/tts?text=${encodeURIComponent(script)}&lang=${lang}`;
+          audioUrl = `/api/tts?text=${encodeURIComponent(script)}&lang=${lang}&voice=${encodeURIComponent(normVoice)}`;
         }
 
         if (audioUrl) {

@@ -59,7 +59,8 @@ O arquivo `project.json` define a lista de cenas no array `cards`:
       "audio": {
         "mode": "tts",
         "script": "Texto que a voz neural irá narrar.",
-        "voiceId": "pt-BR-Antonio",
+        "voiceId": "pt-BR-AntonioNeural",
+        "provider": "cromyvoice",
         "speed": 1.0
       },
       "transition": {
@@ -79,8 +80,17 @@ O arquivo `project.json` define a lista de cenas no array `cards`:
 }
 ```
 
-## 3. Seleção de Vozes TTS
+## 3. Seleção de Vozes TTS (Motor CromyVoice Integrado)
 Execute `npm run cli -- voices` para ver a lista completa.
-- `pt-BR-Antonio` (Português Masculino - Padrão)
-- `pt-BR-Francisca` (Português Feminino - Corporativo)
-- `pt-BR-Brenda` (Português Feminino - Jovem/Ágil)
+- `pt-BR-AntonioNeural`: Masculino natural / padrão
+- `pt-BR-FranciscaNeural`: Feminino corporativo
+- `pt-BR-BrendaNeural`: Feminino ágil / shorts
+- `pt-BR-DonatoNeural`: Masculino grave / documentário
+- `pt-BR-ElzaNeural`: Feminino suave / didático
+- `pt-BR-FabioNeural`: Masculino dinâmico / reels
+- `pt-BR-NicolauNeural`: Masculino clássico
+- `pt-BR-ValerioNeural`: Masculino assertivo
+- `pt-BR-YaraNeural`: Feminino brilhante
+- `en-US-GuyNeural`, `en-US-JennyNeural`, `en-US-AriaNeural`: Inglês
+- `es-ES-AlvaroNeural`, `es-ES-ElviraNeural`: Espanhol
+
