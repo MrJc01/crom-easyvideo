@@ -12,6 +12,8 @@ import {
   TemplateCatalogModal,
   JsonModal,
   RenderModal,
+  TemplateSandbox,
+  CardCreationDocs,
 } from './components';
 
 export default function App() {
@@ -24,6 +26,7 @@ export default function App() {
   const [isRenderModalOpen, setIsRenderModalOpen] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [mobileView, setMobileView] = useState<'both' | 'player' | 'inspector'>('both');
+  const [currentView, setCurrentView] = useState<'studio' | 'sandbox' | 'docs'>('studio');
 
   const { calculatedCards, totalFrames } = useMemo(() => {
     return calculateTimeline(project.cards, project.meta.fps);
@@ -146,6 +149,43 @@ export default function App() {
           </div>
         </div>
 
+        {/* Navigation Selector de Rotas / Abas no Topo */}
+        <nav className="hidden md:flex items-center bg-slate-950/80 border border-slate-800 rounded-xl p-1 gap-1">
+          <button
+            onClick={() => setCurrentView('studio')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+              currentView === 'studio'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Icons.Film />
+            <span>Estúdio de Vídeo</span>
+          </button>
+          <button
+            onClick={() => setCurrentView('sandbox')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+              currentView === 'sandbox'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Icons.Sparkles />
+            <span>Sandbox de Templates</span>
+          </button>
+          <button
+            onClick={() => setCurrentView('docs')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+              currentView === 'docs'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Icons.Code />
+            <span>Guia de Criação</span>
+          </button>
+        </nav>
+
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Botão Principal de Renderizar & Baixar */}
           <button
@@ -180,89 +220,101 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Studio Workspace */}
-      <main className="flex-1 p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 max-w-[1700px] w-full mx-auto">
-        {/* Mobile Quick Selector */}
-        <div className="flex lg:hidden bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs font-medium">
-          <button
-            onClick={() => setMobileView('both')}
-            className={`flex-1 py-1.5 rounded-lg text-center transition ${
-              mobileView === 'both' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
-            }`}
-          >
-            Visão Completa
-          </button>
-          <button
-            onClick={() => setMobileView('player')}
-            className={`flex-1 py-1.5 rounded-lg text-center transition ${
-              mobileView === 'player' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
-            }`}
-          >
-            Apenas Player
-          </button>
-          <button
-            onClick={() => setMobileView('inspector')}
-            className={`flex-1 py-1.5 rounded-lg text-center transition ${
-              mobileView === 'inspector' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
-            }`}
-          >
-            Apenas Editor
-          </button>
-        </div>
+      {/* Visualização Condicional: Sandbox de Templates */}
+      {currentView === 'sandbox' && (
+        <TemplateSandbox onBackToStudio={() => setCurrentView('studio')} />
+      )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 flex-1 items-start">
-          {/* Central Remotion Player */}
-          <div
-            className={`lg:col-span-7 flex flex-col gap-4 ${
-              mobileView === 'inspector' ? 'hidden lg:flex' : 'flex'
-            }`}
-          >
-            <VideoPlayer
-              project={project}
+      {/* Visualização Condicional: Guia de Criação de Cards */}
+      {currentView === 'docs' && (
+        <CardCreationDocs onBackToStudio={() => setCurrentView('studio')} />
+      )}
+
+      {/* Visualização Principal: Estúdio Remotion */}
+      {currentView === 'studio' && (
+        <main className="flex-1 p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 max-w-[1700px] w-full mx-auto">
+          {/* Mobile Quick Selector */}
+          <div className="flex lg:hidden bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs font-medium">
+            <button
+              onClick={() => setMobileView('both')}
+              className={`flex-1 py-1.5 rounded-lg text-center transition ${
+                mobileView === 'both' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
+              }`}
+            >
+              Visão Completa
+            </button>
+            <button
+              onClick={() => setMobileView('player')}
+              className={`flex-1 py-1.5 rounded-lg text-center transition ${
+                mobileView === 'player' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
+              }`}
+            >
+              Apenas Player
+            </button>
+            <button
+              onClick={() => setMobileView('inspector')}
+              className={`flex-1 py-1.5 rounded-lg text-center transition ${
+                mobileView === 'inspector' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
+              }`}
+            >
+              Apenas Editor
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 flex-1 items-start">
+            {/* Central Remotion Player */}
+            <div
+              className={`lg:col-span-7 flex flex-col gap-4 ${
+                mobileView === 'inspector' ? 'hidden lg:flex' : 'flex'
+              }`}
+            >
+              <VideoPlayer
+                project={project}
+                currentFrame={currentFrame}
+                isPlaying={isPlaying}
+                onFrameChange={handleSeek}
+                onTogglePlay={togglePlay}
+                calculatedCards={calculatedCards}
+                totalFrames={totalFrames}
+                activeCard={activeCard}
+                isMuted={isMuted}
+                onToggleMute={() => setIsMuted(!isMuted)}
+                isSpeaking={isSpeaking}
+                isAudioHolding={isAudioHolding}
+                onOpenRenderModal={() => setIsRenderModalOpen(true)}
+              />
+            </div>
+
+            {/* Modular Dynamic Inspector */}
+            <div
+              className={`lg:col-span-5 h-[520px] sm:h-[580px] lg:h-[620px] ${
+                mobileView === 'player' ? 'hidden lg:block' : 'block'
+              }`}
+            >
+              <CardInspector
+                card={selectedCard}
+                onUpdateCard={handleUpdateCard}
+                fps={project.meta.fps}
+              />
+            </div>
+          </div>
+
+          {/* Bottom Horizontal Timeline Filmstrip */}
+          <div className="w-full">
+            <TimelineCardStrip
+              cards={calculatedCards}
+              selectedCardId={selectedCardId}
+              onSelectCard={setSelectedCardId}
+              onReorderCards={(newCards) => setProject((prev) => ({ ...prev, cards: newCards }))}
+              onDuplicateCard={handleDuplicateCard}
+              onDeleteCard={handleDeleteCard}
+              onOpenCatalog={() => setIsCatalogOpen(true)}
               currentFrame={currentFrame}
-              isPlaying={isPlaying}
-              onFrameChange={handleSeek}
-              onTogglePlay={togglePlay}
-              calculatedCards={calculatedCards}
-              totalFrames={totalFrames}
-              activeCard={activeCard}
-              isMuted={isMuted}
-              onToggleMute={() => setIsMuted(!isMuted)}
-              isSpeaking={isSpeaking}
-              isAudioHolding={isAudioHolding}
-              onOpenRenderModal={() => setIsRenderModalOpen(true)}
+              onSeekToCard={handleSeek}
             />
           </div>
-
-          {/* Modular Dynamic Inspector */}
-          <div
-            className={`lg:col-span-5 h-[520px] sm:h-[580px] lg:h-[620px] ${
-              mobileView === 'player' ? 'hidden lg:block' : 'block'
-            }`}
-          >
-            <CardInspector
-              card={selectedCard}
-              onUpdateCard={handleUpdateCard}
-              fps={project.meta.fps}
-            />
-          </div>
-        </div>
-
-        {/* Bottom Horizontal Timeline Filmstrip */}
-        <div className="w-full">
-          <TimelineCardStrip
-            cards={calculatedCards}
-            selectedCardId={selectedCardId}
-            onSelectCard={setSelectedCardId}
-            onReorderCards={(newCards) => setProject((prev) => ({ ...prev, cards: newCards }))}
-            onDuplicateCard={handleDuplicateCard}
-            onDeleteCard={handleDeleteCard}
-            onOpenCatalog={() => setIsCatalogOpen(true)}
-            currentFrame={currentFrame}
-            onSeekToCard={handleSeek}
-          />
-        </div>
-      </main>
+        </main>
+      )}
 
       {/* Modals */}
       <TemplateCatalogModal

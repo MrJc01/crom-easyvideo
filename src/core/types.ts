@@ -60,6 +60,22 @@ export interface RecordAudioConfig {
 
 export type CardAudioConfig = TTSAudioConfig | FileAudioConfig | RecordAudioConfig;
 
+// ---------------------------------------------------------------------------
+// Tipagem do Motor de Transições Inter-Cenas
+// ---------------------------------------------------------------------------
+export type TransitionType =
+  | 'none'
+  | 'fade'
+  | 'slide-left'
+  | 'slide-right'
+  | 'zoom-in'
+  | 'wipe-left';
+
+export interface CardTransitionConfig {
+  type: TransitionType;
+  durationInFrames: number;
+}
+
 export interface VideoCard {
   id: string;
   order: number;
@@ -69,6 +85,7 @@ export interface VideoCard {
   manualDurationInSeconds?: number;
   audioPaddingEndInSeconds: number;
   audio: CardAudioConfig;
+  transition?: CardTransitionConfig;
   /** Compatibilidade transitória com código legado */
   tts?: {
     script: string;

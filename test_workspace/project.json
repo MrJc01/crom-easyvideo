@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "Projeto de Demonstração CLI",
+    "fps": 30,
+    "width": 1920,
+    "height": 1080
+  },
+  "cards": [
+    {
+      "id": "scene-intro",
+      "order": 0,
+      "templateId": "hero-title",
+      "durationMode": "auto",
+      "manualDurationInFrames": 180,
+      "manualDurationInSeconds": 6.0,
+      "audioPaddingEndInSeconds": 0.8,
+      "audio": {
+        "mode": "tts",
+        "script": "Apresentamos o pipeline de automação via CLI do Remotion Studio.",
+        "voiceId": "pt-BR-Antonio",
+        "provider": "browser-tts",
+        "speed": 1.0,
+        "audioDurationInSeconds": 4.5
+      },
+      "transition": {
+        "type": "fade",
+        "durationInFrames": 15
+      },
+      "props": {
+        "showBadge": true,
+        "badge": "CLI PIPELINE",
+        "title": "Automação de Vídeos",
+        "showSubtitle": true,
+        "subtitle": "Processamento headless e renderização programática",
+        "accentColor": "#6366f1"
+      }
+    },
+    {
+      "id": "scene-code",
+      "order": 1,
+      "templateId": "code-snippet",
+      "durationMode": "auto",
+      "manualDurationInFrames": 150,
+      "manualDurationInSeconds": 5.0,
+      "audioPaddingEndInSeconds": 0.8,
+      "audio": {
+        "mode": "tts",
+        "script": "Comandos simples no terminal compilam timelines complexas.",
+        "voiceId": "pt-BR-Francisca",
+        "provider": "browser-tts",
+        "speed": 1.0,
+        "audioDurationInSeconds": 4.0
+      },
+      "transition": {
+        "type": "slide-left",
+        "durationInFrames": 15
+      },
+      "props": {
+        "filename": "pipeline.py",
+        "code": "import crom_easyvideo as cev\n\nproject = cev.load('workspace/')\nproject.render(output='video.webm')"
+      }
+    }
+  ]
+}

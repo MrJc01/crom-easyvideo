@@ -7,3 +7,5 @@ export { TemplateCatalogModal } from './TemplateCatalogModal';
 export { JsonModal } from './JsonModal';
 export { RenderModal } from './RenderModal';
 export { AudioSourceSelector } from './AudioSourceSelector';
+export { TemplateSandbox } from './TemplateSandbox';
+export { CardCreationDocs } from './CardCreationDocs';

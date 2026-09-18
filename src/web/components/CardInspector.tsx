@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { CalculatedCard, VideoCard } from '../../core/types';
+import type { CalculatedCard, VideoCard, TransitionType } from '../../core/types';
 import { Icons } from '../../core/icons';
 import { CARD_REGISTRY } from '../../templates/registry';
 import { parseScriptAndDelays } from '../../core/timeline';
@@ -353,6 +353,71 @@ export const CardInspector: React.FC<CardInspectorProps> = ({ card, onUpdateCard
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Configuração de Transição de Entrada */}
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <Icons.Layers />
+                <span>Transição de Entrada da Cena</span>
+              </label>
+
+              <div className="space-y-3 pt-1">
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1.5 font-medium">
+                    Efeito Visual
+                  </label>
+                  <select
+                    value={card.transition?.type || 'none'}
+                    onChange={(e) =>
+                      onUpdateCard({
+                        ...card,
+                        transition: {
+                          type: e.target.value as TransitionType,
+                          durationInFrames: card.transition?.durationInFrames ?? 15,
+                        },
+                      })
+                    }
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs font-semibold text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="none">Nenhuma (Corte Seco)</option>
+                    <option value="fade">Fade In (Dissolvência)</option>
+                    <option value="slide-left">Slide da Direita (Slide Left)</option>
+                    <option value="slide-right">Slide da Esquerda (Slide Right)</option>
+                    <option value="zoom-in">Zoom In (Escala & Opacidade)</option>
+                    <option value="wipe-left">Wipe Revelação (Wipe Left)</option>
+                  </select>
+                </div>
+
+                {card.transition?.type && card.transition.type !== 'none' && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-400">Duração da Transição:</span>
+                      <span className="font-mono text-indigo-400 font-bold">
+                        {card.transition?.durationInFrames ?? 15} frames (
+                        {(((card.transition?.durationInFrames ?? 15) / fps)).toFixed(2)}s)
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={5}
+                      max={45}
+                      step={1}
+                      value={card.transition?.durationInFrames ?? 15}
+                      onChange={(e) =>
+                        onUpdateCard({
+                          ...card,
+                          transition: {
+                            type: card.transition?.type || 'fade',
+                            durationInFrames: parseInt(e.target.value, 10) || 15,
+                          },
+                        })
+                      }
+                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
