@@ -9,3 +9,4 @@ export { RenderModal } from './RenderModal';
 export { AudioSourceSelector } from './AudioSourceSelector';
 export { TemplateSandbox } from './TemplateSandbox';
 export { CardCreationDocs } from './CardCreationDocs';
+export { StackedCardsEditor } from './StackedCardsEditor';

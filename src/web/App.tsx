@@ -14,6 +14,7 @@ import {
   RenderModal,
   TemplateSandbox,
   CardCreationDocs,
+  StackedCardsEditor,
 } from './components';
 
 export default function App() {
@@ -26,7 +27,7 @@ export default function App() {
   const [isRenderModalOpen, setIsRenderModalOpen] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [mobileView, setMobileView] = useState<'both' | 'player' | 'inspector'>('both');
-  const [currentView, setCurrentView] = useState<'studio' | 'sandbox' | 'docs'>('studio');
+  const [currentView, setCurrentView] = useState<'studio' | 'cards' | 'sandbox' | 'docs'>('studio');
 
   const { calculatedCards, totalFrames } = useMemo(() => {
     return calculateTimeline(project.cards, project.meta.fps);
@@ -167,6 +168,17 @@ export default function App() {
             <span>Estúdio de Vídeo</span>
           </button>
           <button
+            onClick={() => setCurrentView('cards')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+              currentView === 'cards'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Icons.LayoutTemplate />
+            <span>Editor em Cards</span>
+          </button>
+          <button
             onClick={() => setCurrentView('sandbox')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
               currentView === 'sandbox'
@@ -223,6 +235,62 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* Mobile Navigation Selector */}
+      <div className="flex md:hidden bg-slate-900 border-b border-slate-800 px-3 py-1.5 gap-1 overflow-x-auto text-xs shrink-0">
+        <button
+          onClick={() => setCurrentView('studio')}
+          className={`px-2.5 py-1 rounded-lg shrink-0 font-medium transition ${
+            currentView === 'studio' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
+          }`}
+        >
+          Estúdio
+        </button>
+        <button
+          onClick={() => setCurrentView('cards')}
+          className={`px-2.5 py-1 rounded-lg shrink-0 font-medium transition ${
+            currentView === 'cards' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
+          }`}
+        >
+          Editor em Cards
+        </button>
+        <button
+          onClick={() => setCurrentView('sandbox')}
+          className={`px-2.5 py-1 rounded-lg shrink-0 font-medium transition ${
+            currentView === 'sandbox' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
+          }`}
+        >
+          Sandbox
+        </button>
+        <button
+          onClick={() => setCurrentView('docs')}
+          className={`px-2.5 py-1 rounded-lg shrink-0 font-medium transition ${
+            currentView === 'docs' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'
+          }`}
+        >
+          Guia
+        </button>
+      </div>
+
+      {/* Visualização Condicional: Editor de Cenas em Cards Empilhados */}
+      {currentView === 'cards' && (
+        <StackedCardsEditor
+          project={project}
+          setProject={setProject}
+          calculatedCards={calculatedCards}
+          totalFrames={totalFrames}
+          fps={project.meta.fps}
+          onUpdateCard={handleUpdateCard}
+          onDeleteCard={handleDeleteCard}
+          onDuplicateCard={handleDuplicateCard}
+          onReorderCards={(newCards) => setProject((prev) => ({ ...prev, cards: newCards }))}
+          onAddFromTemplate={handleAddFromTemplate}
+          onOpenRenderModal={() => setIsRenderModalOpen(true)}
+          onOpenCatalog={() => setIsCatalogOpen(true)}
+          onOpenJsonModal={() => setIsJsonModalOpen(true)}
+          onSwitchToStudio={() => setCurrentView('studio')}
+        />
+      )}
 
       {/* Visualização Condicional: Sandbox de Templates */}
       {currentView === 'sandbox' && (
