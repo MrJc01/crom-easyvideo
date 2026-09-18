@@ -68,6 +68,7 @@ export interface VideoPlayerProps {
   isMuted?: boolean;
   onToggleMute?: () => void;
   isSpeaking?: boolean;
+  isAudioHolding?: boolean;
   onOpenRenderModal?: () => void;
 }
 
@@ -83,6 +84,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   isMuted = false,
   onToggleMute,
   isSpeaking = false,
+  isAudioHolding = false,
   onOpenRenderModal,
 }) => {
   // Preset de Resolução Canônica Selecionado
@@ -230,11 +232,21 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         )}
 
-        {/* Indicador Flutuante de Áudio Ativo */}
-        {isPlaying && !isMuted && isSpeaking && (
-          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-emerald-950/90 backdrop-blur-md border border-emerald-500/50 text-emerald-300 text-[10px] sm:text-xs px-2.5 py-1 rounded-lg flex items-center gap-2 font-medium pointer-events-none shadow-lg animate-pulse">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>Áudio Cena #{activeCard ? activeCard.order + 1 : 1}</span>
+        {/* Indicador Flutuante de Áudio Ativo / Slide Hold */}
+        {isPlaying && !isMuted && (
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 flex items-center gap-2 pointer-events-none">
+            {isAudioHolding && (
+              <div className="bg-amber-950/90 backdrop-blur-md border border-amber-500/60 text-amber-300 text-[10px] sm:text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium shadow-lg animate-pulse">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span>Sincronizando áudio...</span>
+              </div>
+            )}
+            {isSpeaking && (
+              <div className="bg-emerald-950/90 backdrop-blur-md border border-emerald-500/50 text-emerald-300 text-[10px] sm:text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <span>Áudio Cena #{activeCard ? activeCard.order + 1 : 1}</span>
+              </div>
+            )}
           </div>
         )}
       </div>

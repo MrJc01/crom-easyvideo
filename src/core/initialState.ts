@@ -13,23 +13,25 @@ export const INITIAL_PROJECT_STATE: ProjectState = {
       order: 0,
       templateId: 'hero-title',
       durationMode: 'auto',
-      manualDurationInFrames: 120,
-      manualDurationInSeconds: 4.0,
+      manualDurationInFrames: 240,
+      manualDurationInSeconds: 8.0,
       audioPaddingEndInSeconds: 0.8,
       audio: {
         mode: 'tts',
         script:
-          'Como funcionam os modelos de linguagem de grande escala? [@sleep-1.0] Vamos compreender a arquitetura e os princípios matemáticos fundamentais.',
+          'Como funcionam os modelos de linguagem de grande escala? [@sleep-0.6] Conheça os fundamentos e a matemática dos Transformers.',
         voiceId: 'pt-BR-Antonio',
         provider: 'browser-tts',
         speed: 1.0,
+        audioDurationInSeconds: 7.2,
       },
       tts: {
         script:
-          'Como funcionam os modelos de linguagem de grande escala? [@sleep-1.0] Vamos compreender a arquitetura e os princípios matemáticos fundamentais.',
+          'Como funcionam os modelos de linguagem de grande escala? [@sleep-0.6] Conheça os fundamentos e a matemática dos Transformers.',
         voiceId: 'pt-BR-Antonio',
         provider: 'browser-tts',
         speed: 1.0,
+        audioDurationInSeconds: 7.2,
       },
       props: {
         showBadge: true,
@@ -46,23 +48,25 @@ export const INITIAL_PROJECT_STATE: ProjectState = {
       order: 1,
       templateId: 'media-split-showcase',
       durationMode: 'auto',
-      manualDurationInFrames: 150,
-      manualDurationInSeconds: 5.0,
+      manualDurationInFrames: 210,
+      manualDurationInSeconds: 7.0,
       audioPaddingEndInSeconds: 0.8,
       audio: {
         mode: 'tts',
         script:
-          'A inferência multimodal processa texto e imagem de forma unificada. [@sleep-0.8] Observe como diferentes modalidades convergem no espaço latente.',
+          'A inferência multimodal processa texto e visão em tempo real, projetando dados no mesmo espaço vetorial semântico.',
         voiceId: 'pt-BR-Francisca',
         provider: 'browser-tts',
         speed: 1.0,
+        audioDurationInSeconds: 6.5,
       },
       tts: {
         script:
-          'A inferência multimodal processa texto e imagem de forma unificada. [@sleep-0.8] Observe como diferentes modalidades convergem no espaço latente.',
+          'A inferência multimodal processa texto e visão em tempo real, projetando dados no mesmo espaço vetorial semântico.',
         voiceId: 'pt-BR-Francisca',
         provider: 'browser-tts',
         speed: 1.0,
+        audioDurationInSeconds: 6.5,
       },
       props: {
         showBadge: true,
@@ -87,23 +91,25 @@ export const INITIAL_PROJECT_STATE: ProjectState = {
       order: 2,
       templateId: 'concept-definition',
       durationMode: 'auto',
-      manualDurationInFrames: 150,
-      manualDurationInSeconds: 5.0,
+      manualDurationInFrames: 210,
+      manualDurationInSeconds: 7.0,
       audioPaddingEndInSeconds: 0.8,
       audio: {
         mode: 'tts',
         script:
-          'Em sua estrutura essencial, uma rede neural autoregressiva calcula probabilidades contextuais para antecipar o próximo token com precisão matemática.',
+          'Redes neurais profundas calculam probabilidades contextuais para prever a próxima palavra com alta precisão estatística.',
         voiceId: 'pt-BR-Antonio',
         provider: 'browser-tts',
         speed: 1.0,
+        audioDurationInSeconds: 6.4,
       },
       tts: {
         script:
-          'Em sua estrutura essencial, uma rede neural autoregressiva calcula probabilidades contextuais para antecipar o próximo token com precisão matemática.',
+          'Redes neurais profundas calculam probabilidades contextuais para prever a próxima palavra com alta precisão estatística.',
         voiceId: 'pt-BR-Antonio',
         provider: 'browser-tts',
         speed: 1.0,
+        audioDurationInSeconds: 6.4,
       },
       props: {
         showTag: true,

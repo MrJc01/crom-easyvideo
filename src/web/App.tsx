@@ -4,10 +4,7 @@ import { INITIAL_PROJECT_STATE } from '../core/initialState';
 import { calculateTimeline } from '../core/timeline';
 import { Icons } from '../core/icons';
 import { CARD_REGISTRY } from '../templates/registry';
-import {
-  playScriptWithSpeechSynthesis,
-  stopSpeechSynthesis,
-} from '../tts/providers/browserTts';
+import { useAudioSlideSync } from './hooks/useAudioSlideSync';
 import {
   VideoPlayer,
   CardInspector,
@@ -26,10 +23,7 @@ export default function App() {
   const [isJsonModalOpen, setIsJsonModalOpen] = useState<boolean>(false);
   const [isRenderModalOpen, setIsRenderModalOpen] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [mobileView, setMobileView] = useState<'both' | 'player' | 'inspector'>('both');
-
-  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
   const { calculatedCards, totalFrames } = useMemo(() => {
     return calculateTimeline(project.cards, project.meta.fps);
@@ -52,112 +46,18 @@ export default function App() {
     return calculatedCards.find((c) => c.id === selectedCardId) || activeCard;
   }, [calculatedCards, selectedCardId, activeCard]);
 
-  // Loop de Reprodução da Timeline
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const intervalTime = 1000 / project.meta.fps;
-    const timer = setInterval(() => {
-      setCurrentFrame((prev) => {
-        if (prev >= totalFrames - 1) {
-          setIsPlaying(false);
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, intervalTime);
-
-    return () => clearInterval(timer);
-  }, [isPlaying, totalFrames, project.meta.fps]);
-
-  // Sincronização Automática de Áudio (TTS, Arquivo ou Gravação) ao dar Play
-  useEffect(() => {
-    if (!isPlaying || isMuted) {
-      setIsSpeaking(false);
-      stopSpeechSynthesis();
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-      }
-      return;
-    }
-
-    if (!activeCard) {
-      setIsSpeaking(false);
-      return;
-    }
-
-    // Interrompe fala e áudio anteriores
-    stopSpeechSynthesis();
-    if (audioPlayerRef.current) {
-      audioPlayerRef.current.pause();
-    }
-
-    const audioMode = activeCard.audio?.mode || (activeCard.tts ? 'tts' : 'none');
-
-    // Reprodução de Arquivo de Áudio Carregado
-    if (
-      audioMode === 'file' &&
-      activeCard.audio &&
-      'fileUrl' in activeCard.audio &&
-      activeCard.audio.fileUrl
-    ) {
-      setIsSpeaking(true);
-      const audio = new Audio(activeCard.audio.fileUrl);
-      audioPlayerRef.current = audio;
-      audio.onended = () => setIsSpeaking(false);
-      audio.onerror = () => setIsSpeaking(false);
-      audio.play().catch((err) => console.warn('Falha na reprodução do arquivo de áudio:', err));
-    }
-    // Reprodução de Gravação de Microfone
-    else if (
-      audioMode === 'record' &&
-      activeCard.audio &&
-      'blobUrl' in activeCard.audio &&
-      activeCard.audio.blobUrl
-    ) {
-      setIsSpeaking(true);
-      const audio = new Audio(activeCard.audio.blobUrl);
-      audioPlayerRef.current = audio;
-      audio.onended = () => setIsSpeaking(false);
-      audio.onerror = () => setIsSpeaking(false);
-      audio.play().catch((err) => console.warn('Falha na reprodução da gravação:', err));
-    }
-    // Reprodução via Síntese de Voz (TTS)
-    else {
-      const script =
-        activeCard.audio && 'script' in activeCard.audio
-          ? activeCard.audio.script
-          : activeCard.tts?.script;
-      const speed =
-        activeCard.audio && 'speed' in activeCard.audio
-          ? activeCard.audio.speed
-          : activeCard.tts?.speed || 1.0;
-
-      if (!script) {
-        setIsSpeaking(false);
-        return;
-      }
-
-      setIsSpeaking(true);
-      const cancelTts = playScriptWithSpeechSynthesis(script, speed, {
-        onStart: () => setIsSpeaking(true),
-        onEnd: () => setIsSpeaking(false),
-        onError: () => setIsSpeaking(false),
-      });
-
-      return () => {
-        setIsSpeaking(false);
-        cancelTts();
-      };
-    }
-
-    return () => {
-      setIsSpeaking(false);
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-      }
-    };
-  }, [isPlaying, activeCard?.id, isMuted]);
+  // Hook Central de Sincronização em Lockstep entre Áudio e Slides do Preview
+  const { isSpeaking, isAudioHolding, handleSeek, togglePlay } = useAudioSlideSync({
+    cards: calculatedCards,
+    totalFrames,
+    fps: project.meta.fps,
+    currentFrame,
+    setCurrentFrame,
+    isPlaying,
+    setIsPlaying,
+    isMuted,
+    activeCard,
+  });
 
   const handleUpdateCard = (updated: VideoCard) => {
     setProject((prev) => ({
@@ -321,14 +221,15 @@ export default function App() {
               project={project}
               currentFrame={currentFrame}
               isPlaying={isPlaying}
-              onFrameChange={setCurrentFrame}
-              onTogglePlay={() => setIsPlaying(!isPlaying)}
+              onFrameChange={handleSeek}
+              onTogglePlay={togglePlay}
               calculatedCards={calculatedCards}
               totalFrames={totalFrames}
               activeCard={activeCard}
               isMuted={isMuted}
               onToggleMute={() => setIsMuted(!isMuted)}
               isSpeaking={isSpeaking}
+              isAudioHolding={isAudioHolding}
               onOpenRenderModal={() => setIsRenderModalOpen(true)}
             />
           </div>
@@ -358,7 +259,7 @@ export default function App() {
             onDeleteCard={handleDeleteCard}
             onOpenCatalog={() => setIsCatalogOpen(true)}
             currentFrame={currentFrame}
-            onSeekToCard={(frame) => setCurrentFrame(frame)}
+            onSeekToCard={handleSeek}
           />
         </div>
       </main>
@@ -378,7 +279,7 @@ export default function App() {
         onImport={(imported) => {
           setProject(imported);
           setSelectedCardId(imported.cards[0]?.id || '');
-          setCurrentFrame(0);
+          handleSeek(0);
         }}
       />
 
