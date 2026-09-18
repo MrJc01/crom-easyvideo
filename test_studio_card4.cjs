@@ -25,6 +25,11 @@ async function testCard4InStudio() {
   await page.locator('button:has-text("Adicionar Template")').click();
   await page.waitForTimeout(800);
 
+  // Clica no último card da timeline (Cena 4)
+  const lastCard = page.locator('div[draggable="true"]').last();
+  await lastCard.click();
+  await page.waitForTimeout(600);
+
   // Agora no inspector da direita, verificar cena ativa
   const inspectorText = await page.locator('body').innerText();
   console.log('Inspector text includes Arquitetura:', inspectorText.includes('Arquitetura Completa de Sistema'));
