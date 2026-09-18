@@ -169,6 +169,29 @@ export const Icons = {
       <line x1="8.12" y1="8.12" x2="12" y2="12" />
     </svg>
   ),
+  Volume: () => (
+    <svg className="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+    </svg>
+  ),
+  VolumeX: () => (
+    <svg className="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <line x1="23" y1="9" x2="17" y2="15" />
+      <line x1="17" y1="9" x2="23" y2="15" />
+    </svg>
+  ),
+  ChevronLeft: () => (
+    <svg className="w-3.5 h-3.5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+  ),
+  ChevronRight: () => (
+    <svg className="w-3.5 h-3.5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  ),
 };
 
 export const TemplateIconMap: Record<string, React.FC> = {

@@ -39,34 +39,34 @@ export const conceptDefinitionTemplate: TemplateDefinition = {
     const cardS = spring({ frame: frame - 3, fps });
     const points = Array.isArray(props.bulletPoints) ? props.bulletPoints : [];
     return (
-      <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center p-4 sm:p-12 relative overflow-hidden">
+      <div className="w-full h-full bg-slate-950 flex flex-col justify-center items-center p-12 relative overflow-hidden">
         <div
-          className="max-w-4xl w-full bg-slate-900/90 border border-slate-800 rounded-2xl sm:rounded-3xl p-5 sm:p-10 shadow-2xl backdrop-blur-xl"
+          className="max-w-5xl w-full bg-slate-900/90 border border-slate-800 rounded-3xl p-10 shadow-2xl backdrop-blur-xl"
           style={{ transform: `scale(${cardS})`, opacity: cardS }}
         >
-          <div className="mb-2 sm:mb-4">
+          <div className="mb-4">
             {props.showTag && (
-              <span className="text-cyan-400 text-[10px] sm:text-xs font-mono uppercase tracking-widest">
+              <span className="text-cyan-400 text-sm font-mono uppercase tracking-widest font-semibold">
                 {props.tag}
               </span>
             )}
-            <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mt-1">
+            <h2 className="text-4xl font-extrabold text-white tracking-tight mt-1">
               {props.conceptTitle}
             </h2>
           </div>
-          <p className="text-slate-300 text-xs sm:text-base md:text-lg leading-relaxed mb-4 sm:mb-6 border-l-4 border-cyan-500 pl-3 sm:pl-4 bg-slate-800/40 py-1.5 sm:py-2 rounded-r-lg">
+          <p className="text-slate-200 text-xl leading-relaxed mb-6 border-l-4 border-cyan-500 pl-4 bg-slate-800/40 py-3 rounded-r-xl">
             {props.statement}
           </p>
-          <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-3">
             {points.map((pt: string, idx: number) => {
               const itemS = spring({ frame: frame - 10 - idx * 5, fps });
               return (
                 <div
                   key={idx}
-                  className="flex items-start gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-200 text-xs sm:text-sm font-medium"
+                  className="flex items-start gap-3.5 p-3 rounded-xl bg-slate-800/60 border border-slate-700/50 text-slate-100 text-base font-medium"
                   style={{ transform: `translateX(${(1 - itemS) * 30}px)`, opacity: itemS }}
                 >
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                     {idx + 1}
                   </div>
                   <span>{pt}</span>

@@ -1,15 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { ProjectState, VideoCard } from '../core/types';
 import { INITIAL_PROJECT_STATE } from '../core/initialState';
 import { calculateTimeline } from '../core/timeline';
 import { Icons } from '../core/icons';
 import { CARD_REGISTRY } from '../templates/registry';
 import {
+  playScriptWithSpeechSynthesis,
+  stopSpeechSynthesis,
+} from '../tts/providers/browserTts';
+import {
   VideoPlayer,
   CardInspector,
   TimelineCardStrip,
   TemplateCatalogModal,
   JsonModal,
+  RenderModal,
 } from './components';
 
 export default function App() {
@@ -19,7 +24,12 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isCatalogOpen, setIsCatalogOpen] = useState<boolean>(false);
   const [isJsonModalOpen, setIsJsonModalOpen] = useState<boolean>(false);
+  const [isRenderModalOpen, setIsRenderModalOpen] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [mobileView, setMobileView] = useState<'both' | 'player' | 'inspector'>('both');
+
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
 
   const { calculatedCards, totalFrames } = useMemo(() => {
     return calculateTimeline(project.cards, project.meta.fps);
@@ -42,6 +52,7 @@ export default function App() {
     return calculatedCards.find((c) => c.id === selectedCardId) || activeCard;
   }, [calculatedCards, selectedCardId, activeCard]);
 
+  // Loop de Reprodução da Timeline
   useEffect(() => {
     if (!isPlaying) return;
 
@@ -58,6 +69,95 @@ export default function App() {
 
     return () => clearInterval(timer);
   }, [isPlaying, totalFrames, project.meta.fps]);
+
+  // Sincronização Automática de Áudio (TTS, Arquivo ou Gravação) ao dar Play
+  useEffect(() => {
+    if (!isPlaying || isMuted) {
+      setIsSpeaking(false);
+      stopSpeechSynthesis();
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+      return;
+    }
+
+    if (!activeCard) {
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Interrompe fala e áudio anteriores
+    stopSpeechSynthesis();
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+    }
+
+    const audioMode = activeCard.audio?.mode || (activeCard.tts ? 'tts' : 'none');
+
+    // Reprodução de Arquivo de Áudio Carregado
+    if (
+      audioMode === 'file' &&
+      activeCard.audio &&
+      'fileUrl' in activeCard.audio &&
+      activeCard.audio.fileUrl
+    ) {
+      setIsSpeaking(true);
+      const audio = new Audio(activeCard.audio.fileUrl);
+      audioPlayerRef.current = audio;
+      audio.onended = () => setIsSpeaking(false);
+      audio.onerror = () => setIsSpeaking(false);
+      audio.play().catch((err) => console.warn('Falha na reprodução do arquivo de áudio:', err));
+    }
+    // Reprodução de Gravação de Microfone
+    else if (
+      audioMode === 'record' &&
+      activeCard.audio &&
+      'blobUrl' in activeCard.audio &&
+      activeCard.audio.blobUrl
+    ) {
+      setIsSpeaking(true);
+      const audio = new Audio(activeCard.audio.blobUrl);
+      audioPlayerRef.current = audio;
+      audio.onended = () => setIsSpeaking(false);
+      audio.onerror = () => setIsSpeaking(false);
+      audio.play().catch((err) => console.warn('Falha na reprodução da gravação:', err));
+    }
+    // Reprodução via Síntese de Voz (TTS)
+    else {
+      const script =
+        activeCard.audio && 'script' in activeCard.audio
+          ? activeCard.audio.script
+          : activeCard.tts?.script;
+      const speed =
+        activeCard.audio && 'speed' in activeCard.audio
+          ? activeCard.audio.speed
+          : activeCard.tts?.speed || 1.0;
+
+      if (!script) {
+        setIsSpeaking(false);
+        return;
+      }
+
+      setIsSpeaking(true);
+      const cancelTts = playScriptWithSpeechSynthesis(script, speed, {
+        onStart: () => setIsSpeaking(true),
+        onEnd: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false),
+      });
+
+      return () => {
+        setIsSpeaking(false);
+        cancelTts();
+      };
+    }
+
+    return () => {
+      setIsSpeaking(false);
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+    };
+  }, [isPlaying, activeCard?.id, isMuted]);
 
   const handleUpdateCard = (updated: VideoCard) => {
     setProject((prev) => ({
@@ -108,7 +208,8 @@ export default function App() {
       manualDurationInFrames: 120,
       manualDurationInSeconds: 4.0,
       audioPaddingEndInSeconds: 0.8,
-      tts: {
+      audio: {
+        mode: 'tts',
         script: `Apresentamos agora o conceito sobre ${def.name}. [@sleep-1.0] Aprofunde os detalhes no editor.`,
         voiceId: 'pt-BR-Antonio',
         provider: 'browser-tts',
@@ -136,7 +237,7 @@ export default function App() {
             <h1 className="text-xs sm:text-sm md:text-base font-extrabold text-white tracking-tight flex items-center gap-1.5 sm:gap-2 truncate">
               <span className="truncate">Remotion Studio</span>
               <span className="hidden sm:inline-block text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-mono font-normal shrink-0">
-                v3.2 • Modular
+                v3.2 Modular
               </span>
             </h1>
             <p className="text-[10px] sm:text-[11px] text-slate-400 truncate max-w-[200px] sm:max-w-md hidden xs:block">
@@ -146,6 +247,17 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Botão Principal de Renderizar & Baixar */}
+          <button
+            onClick={() => setIsRenderModalOpen(true)}
+            className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/20 flex items-center gap-1.5 sm:gap-2 transition active:scale-95"
+            title="Renderizar e Baixar Vídeo"
+          >
+            <Icons.Video />
+            <span className="hidden sm:inline">Renderizar & Baixar</span>
+            <span className="sm:hidden">Baixar</span>
+          </button>
+
           <button
             onClick={() => setIsCatalogOpen(true)}
             className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 sm:gap-2 transition"
@@ -155,13 +267,14 @@ export default function App() {
             <span className="hidden sm:inline">Loja de Templates</span>
             <span className="sm:hidden">Templates</span>
           </button>
+
           <button
             onClick={() => setIsJsonModalOpen(true)}
             className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 sm:gap-2 transition border border-slate-700"
             title="Importar / Exportar JSON"
           >
             <Icons.Download />
-            <span className="hidden sm:inline">JSON Import / Export</span>
+            <span className="hidden sm:inline">JSON</span>
             <span className="sm:hidden">JSON</span>
           </button>
         </div>
@@ -169,7 +282,7 @@ export default function App() {
 
       {/* Main Studio Workspace */}
       <main className="flex-1 p-3 sm:p-6 flex flex-col gap-4 sm:gap-6 max-w-[1700px] w-full mx-auto">
-        {/* Mobile Quick Selector (only visible on small screens) */}
+        {/* Mobile Quick Selector */}
         <div className="flex lg:hidden bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs font-medium">
           <button
             onClick={() => setMobileView('both')}
@@ -198,7 +311,7 @@ export default function App() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 flex-1 items-start">
-          {/* Central Remotion Player (7 Cols on desktop) */}
+          {/* Central Remotion Player */}
           <div
             className={`lg:col-span-7 flex flex-col gap-4 ${
               mobileView === 'inspector' ? 'hidden lg:flex' : 'flex'
@@ -213,10 +326,14 @@ export default function App() {
               calculatedCards={calculatedCards}
               totalFrames={totalFrames}
               activeCard={activeCard}
+              isMuted={isMuted}
+              onToggleMute={() => setIsMuted(!isMuted)}
+              isSpeaking={isSpeaking}
+              onOpenRenderModal={() => setIsRenderModalOpen(true)}
             />
           </div>
 
-          {/* Modular Dynamic Inspector (5 Cols on desktop) */}
+          {/* Modular Dynamic Inspector */}
           <div
             className={`lg:col-span-5 h-[520px] sm:h-[580px] lg:h-[620px] ${
               mobileView === 'player' ? 'hidden lg:block' : 'block'
@@ -263,6 +380,14 @@ export default function App() {
           setSelectedCardId(imported.cards[0]?.id || '');
           setCurrentFrame(0);
         }}
+      />
+
+      <RenderModal
+        isOpen={isRenderModalOpen}
+        onClose={() => setIsRenderModalOpen(false)}
+        project={project}
+        calculatedCards={calculatedCards}
+        totalFrames={totalFrames}
       />
     </div>
   );

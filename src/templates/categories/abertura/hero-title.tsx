@@ -37,25 +37,25 @@ export const heroTitleTemplate: TemplateDefinition = {
           background: `radial-gradient(circle at 50% 40%, ${props.glowColor || '#312e81'} 0%, #030712 85%)`,
         }}
       >
-        <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:24px_24px]" />
+        <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:28px_28px]" />
         {props.showBadge && (
           <div
-            className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-indigo-500/40 bg-indigo-950/60 text-indigo-300 font-mono text-[10px] sm:text-xs font-semibold tracking-wider mb-4 sm:mb-6 flex items-center gap-2 shadow-lg"
+            className="px-6 py-2 rounded-full border border-indigo-500/40 bg-indigo-950/80 text-indigo-300 font-mono text-lg font-bold tracking-wider mb-6 flex items-center gap-2.5 shadow-xl"
             style={{ transform: `scale(${badgeS})`, opacity: badgeS }}
           >
-            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-indigo-400 animate-ping" />
+            <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-ping" />
             {props.badge}
           </div>
         )}
         <h1
-          className="text-2xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-tight max-w-4xl drop-shadow-2xl"
+          className="text-6xl font-black text-white tracking-tight leading-tight max-w-5xl drop-shadow-2xl"
           style={{ transform: `translateY(${(1 - titleS) * 30}px) scale(${titleS})`, opacity: titleS }}
         >
           {props.title}
         </h1>
         {props.showSubtitle && (
           <p
-            className="text-xs sm:text-lg md:text-xl text-slate-300 max-w-2xl mt-3 sm:mt-6 font-normal leading-relaxed"
+            className="text-2xl text-slate-300 max-w-3xl mt-6 font-normal leading-relaxed"
             style={{ transform: `translateY(${(1 - subS) * 20}px)`, opacity: subS }}
           >
             {props.subtitle}

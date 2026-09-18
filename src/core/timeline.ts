@@ -44,7 +44,8 @@ export function parseScriptAndDelays(rawScript: string, speed: number = 1.0): Pa
     .replace(/\s+/g, ' ')
     .trim();
   const words = cleanText ? cleanText.split(/\s+/).length : 0;
-  const speechEstimatedSeconds = words > 0 ? words / (2.4 * Math.max(0.5, speed)) : 0;
+  // Margem de segurança conservadora para fala
+  const speechEstimatedSeconds = words > 0 ? words / (2.0 * Math.max(0.5, speed)) : 0;
   const totalDurationSeconds = Math.max(
     1.5,
     Math.round((speechEstimatedSeconds + totalSleep) * 10) / 10
@@ -59,6 +60,10 @@ export function parseScriptAndDelays(rawScript: string, speed: number = 1.0): Pa
   };
 }
 
+/**
+ * Calcula os intervalos exatos da timeline baseados no áudio real.
+ * Garante que o card nunca corte a narração antes do seu término completo.
+ */
 export function calculateTimeline(
   cards: VideoCard[],
   fps: number
@@ -73,29 +78,49 @@ export function calculateTimeline(
     let totalDurationInSeconds = 3.0;
 
     if (card.durationMode === 'auto') {
-      const parsed = parseScriptAndDelays(card.tts?.script || '', card.tts?.speed || 1.0);
-      const audioDuration = card.tts?.audioDurationInSeconds || parsed.totalDurationSeconds;
+      let baseAudioDuration = 3.0;
+
+      if (card.audio) {
+        if (card.audio.mode === 'file' || card.audio.mode === 'record') {
+          // Áudio real carregado ou gravado: duração milimétrica exata
+          baseAudioDuration = Math.max(0.5, card.audio.audioDurationInSeconds || 2.0);
+        } else if (card.audio.mode === 'tts') {
+          if (card.audio.audioDurationInSeconds && card.audio.audioDurationInSeconds > 0) {
+            baseAudioDuration = card.audio.audioDurationInSeconds;
+          } else {
+            const parsed = parseScriptAndDelays(card.audio.script || '', card.audio.speed || 1.0);
+            baseAudioDuration = parsed.totalDurationSeconds;
+          }
+        }
+      } else if (card.tts) {
+        // Fallback transitório
+        const parsed = parseScriptAndDelays(card.tts.script || '', card.tts.speed || 1.0);
+        baseAudioDuration = card.tts.audioDurationInSeconds || parsed.totalDurationSeconds;
+      }
+
       const padding = card.audioPaddingEndInSeconds ?? 0.8;
-      totalDurationInSeconds = audioDuration + padding;
+      totalDurationInSeconds = Math.round((baseAudioDuration + padding) * 10) / 10;
       durationInFrames = Math.max(30, Math.ceil(totalDurationInSeconds * fps));
     } else {
-      durationInFrames =
-        card.manualDurationInFrames ||
-        Math.max(30, Math.ceil((card.manualDurationInSeconds || 3) * fps));
-      totalDurationInSeconds = durationInFrames / fps;
+      if (card.manualDurationInFrames) {
+        durationInFrames = Math.max(15, card.manualDurationInFrames);
+        totalDurationInSeconds = durationInFrames / fps;
+      } else if (card.manualDurationInSeconds) {
+        totalDurationInSeconds = card.manualDurationInSeconds;
+        durationInFrames = Math.ceil(totalDurationInSeconds * fps);
+      }
     }
 
-    const startFrame = currentStart;
-    const endFrame = startFrame + durationInFrames;
-    currentStart = endFrame;
-
-    return {
+    const calculated: CalculatedCard = {
       ...card,
       durationInFrames,
-      startFrame,
-      endFrame,
-      totalDurationInSeconds: Math.round(totalDurationInSeconds * 10) / 10,
+      startFrame: currentStart,
+      endFrame: currentStart + durationInFrames,
+      totalDurationInSeconds,
     };
+
+    currentStart += durationInFrames;
+    return calculated;
   });
 
   return {

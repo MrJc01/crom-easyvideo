@@ -31,6 +31,35 @@ export interface FieldDefinition {
   itemDefaultValue?: any;
 }
 
+// ---------------------------------------------------------------------------
+// Tipagem Polimórfica de Áudio (Discriminated Union Extensível)
+// ---------------------------------------------------------------------------
+export type AudioMode = 'tts' | 'file' | 'record';
+
+export interface TTSAudioConfig {
+  mode: 'tts';
+  script: string;
+  voiceId: string;
+  provider: 'browser-tts' | 'elevenlabs' | 'openai';
+  speed: number;
+  audioDurationInSeconds?: number;
+}
+
+export interface FileAudioConfig {
+  mode: 'file';
+  fileUrl: string;
+  fileName: string;
+  audioDurationInSeconds: number;
+}
+
+export interface RecordAudioConfig {
+  mode: 'record';
+  blobUrl: string;
+  audioDurationInSeconds: number;
+}
+
+export type CardAudioConfig = TTSAudioConfig | FileAudioConfig | RecordAudioConfig;
+
 export interface VideoCard {
   id: string;
   order: number;
@@ -39,10 +68,12 @@ export interface VideoCard {
   manualDurationInFrames: number;
   manualDurationInSeconds?: number;
   audioPaddingEndInSeconds: number;
-  tts: {
+  audio: CardAudioConfig;
+  /** Compatibilidade transitória com código legado */
+  tts?: {
     script: string;
     voiceId: string;
-    provider: 'elevenlabs' | 'openai' | 'browser-tts' | string;
+    provider: string;
     speed: number;
     audioUrl?: string;
     audioDurationInSeconds?: number;

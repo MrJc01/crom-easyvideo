@@ -121,9 +121,9 @@ export const TimelineCardStrip: React.FC<TimelineCardStripProps> = ({
                           handleMoveCard(idx, idx - 1);
                         }}
                         title="Mover para esquerda"
-                        className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white text-xs font-mono"
+                        className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
                       >
-                        ◀
+                        <Icons.ChevronLeft />
                       </button>
                     )}
                     {idx < cards.length - 1 && (
@@ -133,9 +133,9 @@ export const TimelineCardStrip: React.FC<TimelineCardStripProps> = ({
                           handleMoveCard(idx, idx + 1);
                         }}
                         title="Mover para direita"
-                        className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white text-xs font-mono"
+                        className="p-1 hover:bg-slate-800 rounded text-slate-400 hover:text-white"
                       >
-                        ▶
+                        <Icons.ChevronRight />
                       </button>
                     )}
                     <button

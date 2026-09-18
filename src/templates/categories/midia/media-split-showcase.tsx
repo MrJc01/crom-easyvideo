@@ -46,17 +46,17 @@ export const mediaSplitShowcaseTemplate: TemplateDefinition = {
     const s = spring({ frame: frame - 2, fps });
     const bullets = Array.isArray(props.bullets) ? props.bullets : [];
     return (
-      <div className="w-full h-full bg-slate-950 grid grid-cols-1 md:grid-cols-12 p-4 sm:p-10 gap-4 sm:gap-8 items-center overflow-y-auto">
-        <div className="md:col-span-6 h-full flex flex-col justify-center" style={{ opacity: s }}>
+      <div className="w-full h-full bg-slate-950 grid grid-cols-12 p-10 gap-8 items-center overflow-hidden">
+        <div className="col-span-6 h-full flex flex-col justify-center" style={{ opacity: s }}>
           {props.showBadge && (
-            <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[10px] sm:text-xs font-mono font-bold uppercase w-max mb-2 sm:mb-3">
+            <span className="px-3.5 py-1 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-sm font-mono font-bold uppercase w-max mb-4">
               {props.badge}
             </span>
           )}
-          <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-white mb-3 sm:mb-6 leading-tight">
+          <h2 className="text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight">
             {props.title}
           </h2>
-          <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-3">
             {bullets.map((b: string, i: number) => {
               const bS = spring({ frame: frame - 8 - i * 4, fps });
               return (

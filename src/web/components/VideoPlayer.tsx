@@ -1,8 +1,60 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { ProjectState, CalculatedCard } from '../../core/types';
 import { Icons } from '../../core/icons';
 import { CARD_REGISTRY } from '../../templates/registry';
 import { VideoComposition } from '../../remotion/VideoComposition';
+
+export interface ResolutionPreset {
+  id: string;
+  label: string;
+  sublabel: string;
+  width: number;
+  height: number;
+  aspectRatio: string;
+}
+
+export const RESOLUTION_PRESETS: ResolutionPreset[] = [
+  {
+    id: '16-9-1080',
+    label: '16:9 Widescreen Full HD',
+    sublabel: '1920 × 1080 (YouTube, Desktop)',
+    width: 1920,
+    height: 1080,
+    aspectRatio: '16 / 9',
+  },
+  {
+    id: '16-9-720',
+    label: '16:9 Widescreen HD',
+    sublabel: '1280 × 720 (YouTube, Rápido)',
+    width: 1280,
+    height: 720,
+    aspectRatio: '16 / 9',
+  },
+  {
+    id: '9-16-1080',
+    label: '9:16 Vertical Story / Reels',
+    sublabel: '1080 × 1920 (TikTok, Shorts, Reels)',
+    width: 1080,
+    height: 1920,
+    aspectRatio: '9 / 16',
+  },
+  {
+    id: '1-1-1080',
+    label: '1:1 Quadrado',
+    sublabel: '1080 × 1080 (Instagram, LinkedIn)',
+    width: 1080,
+    height: 1080,
+    aspectRatio: '1 / 1',
+  },
+  {
+    id: '4-5-1080',
+    label: '4:5 Retrato Feed',
+    sublabel: '1080 × 1350 (Instagram Feed)',
+    width: 1080,
+    height: 1350,
+    aspectRatio: '4 / 5',
+  },
+];
 
 export interface VideoPlayerProps {
   project: ProjectState;
@@ -13,6 +65,10 @@ export interface VideoPlayerProps {
   calculatedCards: CalculatedCard[];
   totalFrames: number;
   activeCard: CalculatedCard | null;
+  isMuted?: boolean;
+  onToggleMute?: () => void;
+  isSpeaking?: boolean;
+  onOpenRenderModal?: () => void;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -24,8 +80,49 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   calculatedCards,
   totalFrames,
   activeCard,
+  isMuted = false,
+  onToggleMute,
+  isSpeaking = false,
+  onOpenRenderModal,
 }) => {
-  const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('16:9');
+  // Preset de Resolução Canônica Selecionado
+  const [selectedPreset, setSelectedPreset] = useState<ResolutionPreset>(
+    RESOLUTION_PRESETS[0] // 16:9 1080p padrão
+  );
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState<number>(0.5);
+
+  // Hook de cálculo de escala proporcional não-destrutiva (Zero crop / Zero distorção)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const updateScale = () => {
+      const parentWidth = el.clientWidth;
+      const parentHeight = el.clientHeight;
+      if (parentWidth === 0 || parentHeight === 0) return;
+
+      const padding = 20;
+      const availW = Math.max(50, parentWidth - padding);
+      const availH = Math.max(50, parentHeight - padding);
+
+      const calculatedScale =
+        Math.min(availW / selectedPreset.width, availH / selectedPreset.height) * 0.95;
+
+      setScale(Math.max(0.08, calculatedScale));
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(el);
+    window.addEventListener('resize', updateScale);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateScale);
+    };
+  }, [selectedPreset.width, selectedPreset.height]);
 
   const localFrame = useMemo(() => {
     if (!activeCard) return 0;
@@ -43,84 +140,108 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   return (
     <div className="flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-      {/* Player Header */}
-      <div className="flex items-center justify-between px-3 sm:px-5 py-2 sm:py-3 border-b border-slate-800 bg-slate-950/80 text-slate-300 gap-2 flex-wrap sm:flex-nowrap">
-        <div className="flex items-center gap-2 sm:gap-3">
+      {/* Player Header com Dropdown de Resoluções Canônicas */}
+      <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-slate-800 bg-slate-950/90 text-slate-300 gap-2 flex-wrap sm:flex-nowrap">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <span className="text-[11px] sm:text-xs font-semibold text-slate-300 uppercase tracking-wider truncate">
-            Player Preview
+            Viewport Canônico
           </span>
-          <span className="bg-slate-800 text-slate-300 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono font-bold">
-            {project.meta.fps} FPS
+          <span className="bg-indigo-950/80 text-indigo-300 border border-indigo-800/60 px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono font-bold shrink-0">
+            {selectedPreset.width} × {selectedPreset.height}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 ml-auto">
-          <div className="flex bg-slate-800 rounded-lg p-0.5 text-xs font-medium">
-            <button
-              onClick={() => setAspectRatio('16:9')}
-              className={`px-2 sm:px-2.5 py-1 rounded-md transition text-xs ${
-                aspectRatio === '16:9' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              16:9
-            </button>
-            <button
-              onClick={() => setAspectRatio('9:16')}
-              className={`px-2 sm:px-2.5 py-1 rounded-md transition text-xs ${
-                aspectRatio === '9:16' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              9:16
-            </button>
-            <button
-              onClick={() => setAspectRatio('1:1')}
-              className={`px-2 sm:px-2.5 py-1 rounded-md transition text-xs ${
-                aspectRatio === '1:1' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              1:1
-            </button>
-          </div>
-          <span className="font-mono text-xs text-indigo-400 bg-indigo-950/60 border border-indigo-900/60 px-2 py-1 rounded-md">
+        {/* Dropdown de Resoluções e Ações */}
+        <div className="flex items-center gap-2 ml-auto flex-wrap sm:flex-nowrap">
+          {/* Seletor Dropdown Padronizado */}
+          <select
+            value={selectedPreset.id}
+            onChange={(e) => {
+              const found = RESOLUTION_PRESETS.find((p) => p.id === e.target.value);
+              if (found) setSelectedPreset(found);
+            }}
+            className="bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-slate-200 text-xs font-semibold rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 transition cursor-pointer"
+          >
+            {RESOLUTION_PRESETS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label} ({p.width} × {p.height})
+              </option>
+            ))}
+          </select>
+
+          {/* Timecode */}
+          <span className="font-mono text-xs text-indigo-400 bg-indigo-950/60 border border-indigo-900/60 px-2 py-1 rounded-md shrink-0">
             {timecode}
           </span>
+
+          {/* Botão de Renderizar no Topo do Player */}
+          {onOpenRenderModal && (
+            <button
+              type="button"
+              onClick={onOpenRenderModal}
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/20 flex items-center gap-1.5 transition shrink-0"
+              title="Renderizar e Baixar Vídeo"
+            >
+              <Icons.Video />
+              <span className="hidden xs:inline">Renderizar</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Video Viewport */}
-      <div className="w-full bg-black flex items-center justify-center p-2 sm:p-4 relative min-h-[240px] sm:min-h-[360px] md:min-h-[460px] max-h-[540px] overflow-hidden">
+      {/* Video Viewport Container com Escala Proporcional Estrita */}
+      <div
+        ref={containerRef}
+        className="w-full bg-black flex items-center justify-center p-2 sm:p-4 relative min-h-[260px] sm:min-h-[400px] md:min-h-[480px] max-h-[580px] overflow-hidden select-none"
+      >
+        {/* Palco Canônico - Largura e Altura Fixas com Escala Não-Destrutiva */}
         <div
-          className={`relative shadow-2xl overflow-hidden transition-all duration-300 rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center ${
-            aspectRatio === '16:9'
-              ? 'aspect-video w-full max-w-4xl'
-              : aspectRatio === '9:16'
-              ? 'aspect-[9/16] h-[340px] sm:h-[480px]'
-              : 'aspect-square h-[280px] sm:h-[440px]'
-          }`}
+          id="remotion-canvas-stage"
+          style={{
+            width: `${selectedPreset.width}px`,
+            height: `${selectedPreset.height}px`,
+            transform: `scale(${scale})`,
+            transformOrigin: 'center center',
+            flexShrink: 0,
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+            backgroundColor: '#030712',
+          }}
         >
           <VideoComposition
             project={project}
             calculatedCards={calculatedCards}
             currentFrame={currentFrame}
           />
-
-          {activeCard && (
-            <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 z-30 bg-slate-900/85 backdrop-blur-md border border-slate-700/60 text-slate-300 text-[10px] sm:text-xs px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg flex items-center gap-1.5 sm:gap-2 font-mono pointer-events-none">
-              <span className="text-indigo-400 font-bold">#{activeCard.order + 1}:</span>
-              <span className="truncate max-w-[120px] sm:max-w-[200px]">
-                {CARD_REGISTRY[activeCard.templateId]?.name || 'Template'}
-              </span>
-              <span className="text-slate-500">
-                ({localFrame}f / {activeCard.durationInFrames}f)
-              </span>
-            </div>
-          )}
         </div>
+
+        {/* Badge Flutuante de Cena Ativa */}
+        {activeCard && (
+          <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-slate-900/90 backdrop-blur-md border border-slate-700/70 text-slate-300 text-[10px] sm:text-xs px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg flex items-center gap-1.5 sm:gap-2 font-mono pointer-events-none shadow-lg">
+            <span className="text-indigo-400 font-bold">#{activeCard.order + 1}:</span>
+            <span className="truncate max-w-[120px] sm:max-w-[200px]">
+              {CARD_REGISTRY[activeCard.templateId]?.name || 'Template'}
+            </span>
+            <span className="text-slate-500">
+              ({localFrame}f / {activeCard.durationInFrames}f)
+            </span>
+          </div>
+        )}
+
+        {/* Indicador Flutuante de Áudio Ativo */}
+        {isPlaying && !isMuted && isSpeaking && (
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-emerald-950/90 backdrop-blur-md border border-emerald-500/50 text-emerald-300 text-[10px] sm:text-xs px-2.5 py-1 rounded-lg flex items-center gap-2 font-medium pointer-events-none shadow-lg animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span>Áudio Cena #{activeCard ? activeCard.order + 1 : 1}</span>
+          </div>
+        )}
       </div>
 
-      {/* Transport & Scrubber */}
+      {/* Transport, Scrubber e Controles de Reprodução */}
       <div className="p-3 sm:p-4 bg-slate-950 border-t border-slate-800 flex flex-col gap-2.5 sm:gap-3">
+        {/* Scrubber da Timeline */}
         <div className="relative w-full">
           <input
             type="range"
@@ -146,6 +267,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         </div>
 
+        {/* Botões de Transporte */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-1 sm:gap-2">
             <button
@@ -185,11 +307,31 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             >
               <Icons.SkipForward />
             </button>
+
+            {/* Alternador de Áudio com Ícone SVG Monocromático */}
+            {onToggleMute && (
+              <button
+                type="button"
+                onClick={onToggleMute}
+                className={`ml-1 sm:ml-2 px-2.5 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition ${
+                  isMuted
+                    ? 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
+                    : 'bg-indigo-950/70 border-indigo-700/60 text-indigo-300 hover:bg-indigo-900/80'
+                }`}
+                title={isMuted ? 'Ativar Áudio da Cena' : 'Silenciar Áudio da Cena'}
+              >
+                {isMuted ? <Icons.VolumeX /> : <Icons.Volume />}
+                <span className="hidden sm:inline">{isMuted ? 'Mudo' : 'Áudio'}</span>
+              </button>
+            )}
           </div>
 
-          <div className="text-[11px] sm:text-xs text-slate-400 font-mono ml-auto">
-            Frame: <span className="text-white font-bold">{currentFrame}</span> / {totalFrames} (
-            {(totalFrames / project.meta.fps).toFixed(1)}s)
+          <div className="text-[11px] sm:text-xs text-slate-400 font-mono ml-auto flex items-center gap-2">
+            <span>
+              Frame: <span className="text-white font-bold">{currentFrame}</span> / {totalFrames}
+            </span>
+            <span className="hidden sm:inline text-slate-600">•</span>
+            <span className="hidden sm:inline">{(totalFrames / project.meta.fps).toFixed(1)}s</span>
           </div>
         </div>
       </div>

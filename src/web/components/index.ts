@@ -5,3 +5,5 @@ export { VideoPlayer } from './VideoPlayer';
 export { TimelineCardStrip } from './TimelineCardStrip';
 export { TemplateCatalogModal } from './TemplateCatalogModal';
 export { JsonModal } from './JsonModal';
+export { RenderModal } from './RenderModal';
+export { AudioSourceSelector } from './AudioSourceSelector';
