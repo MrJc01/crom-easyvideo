@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { VideoCard, CardAudioConfig } from '../../core/types';
 import { Icons } from '../../core/icons';
 import { parseScriptAndDelays } from '../../core/timeline';
+import {
+  playScriptWithSpeechSynthesis,
+  stopSpeechSynthesis,
+} from '../../tts/providers/browserTts';
 
 export interface AudioSourceSelectorProps {
   card: VideoCard;
@@ -28,6 +32,7 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
 
   // Estados para TTS
   const [isPlayingTTS, setIsPlayingTTS] = useState(false);
+  const ttsPreviewCleanupRef = useRef<(() => void) | null>(null);
   const [ttsMeasuredSeconds, setTtsMeasuredSeconds] = useState<number | null>(
     audioConfig.mode === 'tts' && audioConfig.audioDurationInSeconds
       ? audioConfig.audioDurationInSeconds
@@ -51,9 +56,11 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
   // Parar qualquer reprodução ao desmontar ou trocar de card
   useEffect(() => {
     return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+      if (ttsPreviewCleanupRef.current) {
+        ttsPreviewCleanupRef.current();
+        ttsPreviewCleanupRef.current = null;
       }
+      stopSpeechSynthesis();
       if (previewAudioRef.current) {
         previewAudioRef.current.pause();
       }
@@ -179,70 +186,54 @@ export const AudioSourceSelector: React.FC<AudioSourceSelectorProps> = ({
   };
 
   const handlePreviewAndMeasureTTS = () => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-
     if (isPlayingTTS) {
-      window.speechSynthesis.cancel();
+      if (ttsPreviewCleanupRef.current) {
+        ttsPreviewCleanupRef.current();
+        ttsPreviewCleanupRef.current = null;
+      }
+      stopSpeechSynthesis();
       setIsPlayingTTS(false);
       return;
     }
 
     if (audioConfig.mode !== 'tts' || !audioConfig.script.trim()) return;
 
-    window.speechSynthesis.cancel();
     setIsPlayingTTS(true);
-
-    const segments = parsedTts.segments;
-    if (segments.length === 0) {
-      setIsPlayingTTS(false);
-      return;
-    }
-
     const t0 = performance.now();
-    let segmentIndex = 0;
 
-    const playNextSegment = () => {
-      if (segmentIndex >= segments.length) {
-        const measured = Math.round(((performance.now() - t0) / 1000) * 10) / 10;
-        setTtsMeasuredSeconds(measured);
-        setIsPlayingTTS(false);
+    ttsPreviewCleanupRef.current = playScriptWithSpeechSynthesis(
+      audioConfig.script,
+      audioConfig.speed || 1.0,
+      {
+        onStart: () => setIsPlayingTTS(true),
+        onEnd: () => {
+          setIsPlayingTTS(false);
+          const measured = Math.round(((performance.now() - t0) / 1000) * 10) / 10;
+          setTtsMeasuredSeconds(measured);
 
-        // Salva duração real medida no card
-        const updatedAudio: CardAudioConfig = {
-          ...audioConfig,
-          audioDurationInSeconds: measured,
-        };
-        onUpdateCard({
-          ...card,
-          audio: updatedAudio,
-          tts: {
-            script: audioConfig.script,
-            voiceId: audioConfig.voiceId,
-            provider: audioConfig.provider,
-            speed: audioConfig.speed,
+          // Salva duração real medida no card
+          const updatedAudio: CardAudioConfig = {
+            ...audioConfig,
             audioDurationInSeconds: measured,
-          },
-        });
-        return;
-      }
-
-      const seg = segments[segmentIndex];
-      segmentIndex++;
-
-      if (seg.type === 'sleep') {
-        const ms = (seg.sleepDuration || 1) * 1000;
-        setTimeout(playNextSegment, ms);
-      } else {
-        const utterance = new SpeechSynthesisUtterance(seg.text || '');
-        utterance.rate = audioConfig.speed || 1.0;
-        utterance.lang = 'pt-BR';
-        utterance.onend = () => playNextSegment();
-        utterance.onerror = () => setIsPlayingTTS(false);
-        window.speechSynthesis.speak(utterance);
-      }
-    };
-
-    playNextSegment();
+          };
+          onUpdateCard({
+            ...card,
+            audio: updatedAudio,
+            tts: {
+              script: audioConfig.script,
+              voiceId: audioConfig.voiceId,
+              provider: audioConfig.provider,
+              speed: audioConfig.speed,
+              audioDurationInSeconds: measured,
+            },
+          });
+        },
+        onError: () => {
+          setIsPlayingTTS(false);
+        },
+      },
+      audioConfig.voiceId
+    );
   };
 
   const insertSleepTag = (seconds: number) => {

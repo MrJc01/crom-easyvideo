@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Icons, TemplateIconMap } from '../../core/icons';
 import { CARD_REGISTRY, TEMPLATE_CATEGORIES, getAllTemplates } from '../../templates/registry';
 import { isCustomTemplate, deleteCustomTemplate } from '../../core/customTemplates';
+import { StageErrorBoundary } from './StageErrorBoundary';
 
 export interface TemplateCatalogModalProps {
   isOpen: boolean;
@@ -46,7 +47,9 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
   const filtered = useMemo(() => {
     if (activeCategory === 'Todos') return templateList;
     if (activeCategory === 'Customizados') {
-      return templateList.filter((t) => t.id.startsWith('custom-') || isCustomTemplate(t.id));
+      return templateList.filter(
+        (t) => t.id.startsWith('custom-') || isCustomTemplate(t.id) || t.category === 'Customizados'
+      );
     }
     return templateList.filter((t) => t.category === activeCategory);
   }, [templateList, activeCategory]);
@@ -278,11 +281,16 @@ export const TemplateCatalogModal: React.FC<TemplateCatalogModalProps> = ({
                     backgroundColor: '#030712',
                   }}
                 >
-                  <activePreviewDef.Component
-                    props={activePreviewDef.defaultProps}
-                    frame={previewFrame}
-                    fps={fps}
-                  />
+                  <StageErrorBoundary
+                    resetKey={`${activePreviewDef.id}_${previewFrame}`}
+                    title={activePreviewDef.name}
+                  >
+                    <activePreviewDef.Component
+                      props={activePreviewDef.defaultProps}
+                      frame={previewFrame}
+                      fps={fps}
+                    />
+                  </StageErrorBoundary>
                 </div>
               )}
             </div>

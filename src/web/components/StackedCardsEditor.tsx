@@ -22,6 +22,8 @@ import {
 import { MediaFieldEditor } from './MediaFieldEditor';
 import { DynamicArrayField } from './DynamicArrayField';
 import { AudioSourceSelector } from './AudioSourceSelector';
+import { isCustomTemplate } from '../../core/customTemplates';
+import { StageErrorBoundary } from './StageErrorBoundary';
 
 function getCardScriptText(card: VideoCard, fallbackText: string): string {
   if (card.audio && 'script' in card.audio && card.audio.script?.trim()) {
@@ -100,6 +102,9 @@ const StackedSceneCard: React.FC<SceneCardProps> = ({
 
   // Parada segura de qualquer áudio deste card
   const stopCardAudio = useCallback(() => {
+    if (!isSpeakingRef.current && (!audioPlayerRef.current || audioPlayerRef.current.paused)) {
+      return;
+    }
     isSpeakingRef.current = false;
     setIsSpeaking(false);
     if (ttsCleanupRef.current) {
@@ -122,12 +127,22 @@ const StackedSceneCard: React.FC<SceneCardProps> = ({
   const templateDef: TemplateDefinition =
     CARD_REGISTRY[card.templateId] || CARD_REGISTRY['hero-title'];
 
-  const allTemplates = useMemo(() => getAllTemplates(), []);
+  const [templateVersion, setTemplateVersion] = useState(0);
+
+  useEffect(() => {
+    const handleUpdated = () => setTemplateVersion((v) => v + 1);
+    window.addEventListener('crom:templates-updated', handleUpdated);
+    return () => window.removeEventListener('crom:templates-updated', handleUpdated);
+  }, []);
+
+  const allTemplates = useMemo(() => getAllTemplates(), [templateVersion]);
 
   const filteredTemplates = useMemo(() => {
     if (templateCategoryFilter === 'Todos') return allTemplates;
     if (templateCategoryFilter === 'Customizados') {
-      return allTemplates.filter((t) => t.id.startsWith('custom-') || t.category === 'Customizados');
+      return allTemplates.filter(
+        (t) => t.id.startsWith('custom-') || t.category === 'Customizados' || isCustomTemplate(t.id)
+      );
     }
     return allTemplates.filter((t) => t.category === templateCategoryFilter);
   }, [allTemplates, templateCategoryFilter]);
@@ -210,24 +225,39 @@ const StackedSceneCard: React.FC<SceneCardProps> = ({
     });
   };
 
-  // Loop de playback local no preview da cena com sincronização em Lockstep com o Áudio
+  const cardRef = useRef(card);
+  cardRef.current = card;
+
+  const fpsRef = useRef(fps);
+  fpsRef.current = fps;
+
+  const onTogglePlayRef = useRef(onTogglePlay);
+  onTogglePlayRef.current = onTogglePlay;
+
+  const primaryTextRef = useRef(primaryTextValue);
+  primaryTextRef.current = primaryTextValue;
+
+  // 1. Controle de Áudio da Cena (Inicia ao dar Play e encerra ao Pausar/Desmontar)
   useEffect(() => {
     if (!isPlaying) {
       stopCardAudio();
       return;
     }
 
-    // Se começou no final da cena, reseta para o frame 0
-    let currentLocal = localFrame;
-    if (currentLocal >= card.durationInFrames - 1) {
-      currentLocal = 0;
-      setLocalFrame(0);
+    // Desbloqueio e resume preventivo do sintetizador do navegador
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+      } catch {}
     }
 
-    const audioConfig = card.audio;
-    const audioMode = audioConfig?.mode || (card.tts ? 'tts' : 'none');
+    const currentCard = cardRef.current;
+    const audioConfig = currentCard.audio;
+    const audioMode = audioConfig?.mode || (currentCard.tts ? 'tts' : 'none');
 
-    // 1. MODO ARQUIVO OU GRAVAÇÃO (Áudio como Relógio Mestre)
+    // MODO ARQUIVO OU GRAVAÇÃO
     if (audioMode === 'file' || audioMode === 'record') {
       const url =
         audioMode === 'file'
@@ -241,14 +271,14 @@ const StackedSceneCard: React.FC<SceneCardProps> = ({
         const audio = audioPlayerRef.current;
         if (audio) {
           audio.src = url;
-          audio.currentTime = currentLocal / fps;
+          audio.currentTime = 0;
           isSpeakingRef.current = true;
           setIsSpeaking(true);
 
           audio.onended = () => {
             isSpeakingRef.current = false;
             setIsSpeaking(false);
-            onTogglePlay();
+            onTogglePlayRef.current();
             setLocalFrame(0);
           };
 
@@ -258,96 +288,106 @@ const StackedSceneCard: React.FC<SceneCardProps> = ({
           };
 
           audio.play().catch((err) => {
-            console.warn('Playback de áudio suspenso ou bloqueado:', err);
+            console.warn('[StackedSceneCard] Playback de áudio HTML5 bloqueado ou suspenso:', err);
+            isSpeakingRef.current = false;
+            setIsSpeaking(false);
           });
-
-          const interval = setInterval(() => {
-            if (!audio.paused && !audio.ended) {
-              const currentSec = audio.currentTime;
-              const targetFrame = Math.floor(currentSec * fps);
-              if (targetFrame >= card.durationInFrames - 1) {
-                audio.pause();
-                onTogglePlay();
-                setLocalFrame(0);
-              } else {
-                setLocalFrame(targetFrame);
-              }
-            }
-          }, 1000 / fps);
-
-          return () => {
-            clearInterval(interval);
-            audio.pause();
-          };
         }
       }
     }
+    // MODO TTS (Síntese de Fala)
+    else {
+      const scriptText = getCardScriptText(currentCard, primaryTextRef.current);
+      const speed =
+        (audioConfig && 'speed' in audioConfig && audioConfig.speed) ||
+        currentCard.tts?.speed ||
+        1.0;
+      const voiceId =
+        (audioConfig && 'voiceId' in audioConfig && audioConfig.voiceId) ||
+        currentCard.tts?.voiceId ||
+        'pt-BR-Antonio';
 
-    // 2. MODO TTS (Narração de Voz Sintetizada com Slide Hold)
-    const scriptText = getCardScriptText(card, primaryTextValue);
-    const speed =
-      (audioConfig && 'speed' in audioConfig && audioConfig.speed) ||
-      card.tts?.speed ||
-      1.0;
-    const voiceId =
-      (audioConfig && 'voiceId' in audioConfig && audioConfig.voiceId) ||
-      card.tts?.voiceId ||
-      'pt-BR-Antonio';
+      if (scriptText && scriptText.trim()) {
+        isSpeakingRef.current = true;
+        setIsSpeaking(true);
 
-    if (scriptText && scriptText.trim()) {
-      isSpeakingRef.current = true;
-      setIsSpeaking(true);
-
-      ttsCleanupRef.current = playScriptWithSpeechSynthesis(
-        scriptText,
-        speed,
-        {
-          onStart: () => {
-            isSpeakingRef.current = true;
-            setIsSpeaking(true);
+        ttsCleanupRef.current = playScriptWithSpeechSynthesis(
+          scriptText,
+          speed,
+          {
+            onStart: () => {
+              isSpeakingRef.current = true;
+              setIsSpeaking(true);
+            },
+            onEnd: () => {
+              isSpeakingRef.current = false;
+              setIsSpeaking(false);
+            },
+            onError: () => {
+              isSpeakingRef.current = false;
+              setIsSpeaking(false);
+            },
           },
-          onEnd: () => {
-            isSpeakingRef.current = false;
-            setIsSpeaking(false);
-          },
-          onError: () => {
-            isSpeakingRef.current = false;
-            setIsSpeaking(false);
-          },
-        },
-        voiceId
-      );
+          voiceId
+        );
+      }
     }
 
-    // Loop de avanço de frames sincronizado a 30fps
+    return () => {
+      stopCardAudio();
+    };
+  }, [isPlaying, stopCardAudio]);
+
+  // 2. Loop de avanço de frames sincronizado em lockstep (desacoplado do áudio para não reiniciá-lo)
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    // Reseta para frame 0 ao iniciar playback
+    setLocalFrame(0);
+
+    const intervalTime = 1000 / fps;
     const interval = setInterval(() => {
+      const currentCard = cardRef.current;
+      const totalFrames = currentCard.durationInFrames || 120;
+      const audioMode = currentCard.audio?.mode || (currentCard.tts ? 'tts' : 'none');
+      const audio = audioPlayerRef.current;
+
+      // Se for arquivo ou gravação, o áudio é o relógio mestre
+      if (
+        (audioMode === 'file' || audioMode === 'record') &&
+        audio &&
+        !audio.paused &&
+        !audio.ended
+      ) {
+        const targetFrame = Math.floor(audio.currentTime * fps);
+        if (targetFrame >= totalFrames - 1) {
+          audio.pause();
+          onTogglePlayRef.current();
+          setLocalFrame(0);
+        } else {
+          setLocalFrame(targetFrame);
+        }
+        return;
+      }
+
+      // Se for TTS ou sem áudio, avança a cada tick
       setLocalFrame((prev) => {
-        if (prev >= card.durationInFrames - 1) {
-          // Se o TTS ainda estiver narrando, segura o slide (Slide Hold)
+        if (prev >= totalFrames - 1) {
+          // Slide Hold: segura no último quadro se o sintetizador ainda estiver falando
           if (isSpeakingRef.current) {
-            return card.durationInFrames - 1;
+            return totalFrames - 1;
           }
-          onTogglePlay();
+          onTogglePlayRef.current();
           return 0;
         }
         return prev + 1;
       });
-    }, 1000 / fps);
+    }, intervalTime);
 
     return () => {
       clearInterval(interval);
-      stopCardAudio();
     };
-  }, [
-    isPlaying,
-    card.durationInFrames,
-    card.audio,
-    card.tts,
-    primaryTextValue,
-    fps,
-    stopCardAudio,
-    onTogglePlay,
-  ]);
+  }, [isPlaying, fps]);
 
   // Escala proporcional canônica de alta fidelidade
   useEffect(() => {
@@ -760,9 +800,14 @@ const StackedSceneCard: React.FC<SceneCardProps> = ({
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.95)',
             }}
           >
-            {ComponentToRender && (
-              <ComponentToRender props={card.props} frame={localFrame} fps={fps} />
-            )}
+            <StageErrorBoundary
+              resetKey={`${card.id}_${card.templateId}_${localFrame}`}
+              title={`Card #${index + 1}: ${templateDef.name}`}
+            >
+              {ComponentToRender && (
+                <ComponentToRender props={card.props} frame={localFrame} fps={fps} />
+              )}
+            </StageErrorBoundary>
           </div>
         </div>
 
@@ -882,6 +927,15 @@ export const StackedCardsEditor: React.FC<StackedCardsEditorProps> = ({
     };
   }, []);
 
+  const handleTogglePlayCard = useCallback((cardId: string) => {
+    setPlayingCardId((prev) => {
+      if (prev !== null && prev !== cardId) {
+        stopSpeechSynthesis();
+      }
+      return prev === cardId ? null : cardId;
+    });
+  }, []);
+
   const handleMoveScene = (fromIdx: number, toIdx: number) => {
     if (toIdx < 0 || toIdx >= project.cards.length) return;
     const updated = [...project.cards];
@@ -967,9 +1021,7 @@ export const StackedCardsEditor: React.FC<StackedCardsEditorProps> = ({
               totalScenes={calculatedCards.length}
               fps={fps}
               isPlaying={playingCardId === card.id}
-              onTogglePlay={() => {
-                setPlayingCardId((prev) => (prev === card.id ? null : card.id));
-              }}
+              onTogglePlay={() => handleTogglePlayCard(card.id)}
               onUpdateCard={onUpdateCard}
               onDeleteScene={(id) => {
                 if (playingCardId === id) setPlayingCardId(null);

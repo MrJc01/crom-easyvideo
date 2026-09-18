@@ -60,7 +60,7 @@ export function getTemplatesByCategory(category: string): TemplateDefinition[] {
   const all = getAllTemplates();
   if (category === 'Todos') return all;
   if (category === 'Customizados') {
-    return all.filter((t) => t.id.startsWith('custom-'));
+    return all.filter((t) => t.id.startsWith('custom-') || t.category === 'Customizados');
   }
   return all.filter((t) => t.category === category);
 }

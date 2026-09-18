@@ -116,16 +116,18 @@ export interface TemplateRenderProps {
 
 export type TemplateComponent = (props: TemplateRenderProps) => any;
 
+export type TemplateCategory =
+  | 'Abertura & Título'
+  | 'Mídia & Demonstração'
+  | 'Conceitos & Explicações'
+  | 'Arquitetura & IA'
+  | 'Dados, Métricas & Encerramento'
+  | 'Customizados';
+
 export interface TemplateDefinition {
   id: string;
   name: string;
-  category:
-    | 'Abertura & Título'
-    | 'Mídia & Demonstração'
-    | 'Conceitos & Explicações'
-    | 'Arquitetura & IA'
-    | 'Dados, Métricas & Encerramento'
-    | 'Customizados';
+  category: TemplateCategory;
   description: string;
   iconName: string;
   defaultDurationInFrames?: number;

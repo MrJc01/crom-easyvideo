@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import type { TemplateDefinition, TemplateRenderProps } from '../../core/types';
+import type { TemplateDefinition, TemplateRenderProps, TemplateCategory } from '../../core/types';
 import { CARD_REGISTRY, registerTemplate } from '../../templates/registry';
 import { spring, interpolate } from '../../core/animations';
 import { Icons, TemplateIconMap } from '../../core/icons';
@@ -19,62 +19,46 @@ import {
 import { MediaFieldEditor } from './MediaFieldEditor';
 import { DynamicArrayField } from './DynamicArrayField';
 import { getShortLoremForField } from '../../core/lorem';
+import { TEMPLATE_CATEGORIES } from '../../templates/registry';
+import { StageErrorBoundary } from './StageErrorBoundary';
 
-interface StageErrorBoundaryProps {
-  children: React.ReactNode;
-  resetKey?: any;
-}
-
-interface StageErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-}
-
-class StageErrorBoundary extends React.Component<
-  StageErrorBoundaryProps,
-  StageErrorBoundaryState
-> {
-  constructor(props: StageErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error): StageErrorBoundaryState {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[Sandbox Canvas Stage Error]:', error, errorInfo);
-  }
-
-  componentDidUpdate(prevProps: StageErrorBoundaryProps) {
-    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
-      this.setState({ hasError: false, error: null });
+/**
+ * Atualiza os defaultProps dentro do código TSX com os valores atuais de props
+ */
+function updateDefaultPropsInCode(code: string, newProps: Record<string, any>): string {
+  try {
+    const jsonStr = JSON.stringify(newProps, null, 2);
+    // Identifica defaultProps: { ... },
+    const regex = /defaultProps:\s*\{[\s\S]*?\n\s*\},/;
+    if (regex.test(code)) {
+      return code.replace(regex, `defaultProps: ${jsonStr},`);
     }
+  } catch (e) {
+    console.error('Erro ao atualizar defaultProps no código TSX:', e);
   }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="w-full h-full flex flex-col items-center justify-center bg-rose-950/90 p-8 text-rose-200 text-center font-mono select-text">
-          <div className="w-12 h-12 rounded-xl bg-rose-900/80 flex items-center justify-center text-rose-300 mb-3 border border-rose-700">
-            <Icons.AlertTriangle />
-          </div>
-          <h3 className="text-sm font-bold text-rose-300 mb-1">
-            Erro de Execução no Componente
-          </h3>
-          <p className="text-xs max-w-lg bg-black/60 p-3 rounded-lg border border-rose-800/80 text-rose-300 overflow-x-auto text-left whitespace-pre-wrap mb-3">
-            {this.state.error?.message || 'Erro desconhecido'}
-          </p>
-          <span className="text-[11px] text-rose-400/80">
-            Edite o código TSX ou ajuste as propriedades para resolver.
-          </span>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
+  return code;
 }
+
+/**
+ * Atualiza campos de metadados (name, category, description) no código TSX
+ */
+function updateMetadataInCode(
+  code: string,
+  field: 'name' | 'category' | 'description',
+  value: string
+): string {
+  try {
+    const escaped = value.replace(/'/g, "\\'");
+    const regex = new RegExp(`${field}:\\s*['"][^'"]*['"]`);
+    if (regex.test(code)) {
+      return code.replace(regex, `${field}: '${escaped}'`);
+    }
+  } catch (e) {
+    console.error(`Erro ao atualizar ${field} no código TSX:`, e);
+  }
+  return code;
+}
+
 
 // Mapeamento automático em tempo de build de todos os 30 arquivos .tsx nativos das categorias
 const RAW_TEMPLATE_FILES = import.meta.glob(
@@ -240,6 +224,11 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
   const [isCompiledCustom, setIsCompiledCustom] = useState<boolean>(false);
   const [compiledTemplate, setCompiledTemplate] = useState<TemplateDefinition | null>(null);
 
+  // Metadados do template (Nome, Categoria, Descrição)
+  const [templateName, setTemplateName] = useState<string>(activeTemplate?.name || '');
+  const [templateCategory, setTemplateCategory] = useState<string>(activeTemplate?.category || 'Customizados');
+  const [templateDescription, setTemplateDescription] = useState<string>(activeTemplate?.description || '');
+
   // Props editáveis do card
   const [currentProps, setCurrentProps] = useState<Record<string, any>>({
     ...(activeTemplate?.defaultProps || {}),
@@ -267,6 +256,10 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
   // Carrega código .tsx ao alternar de template
   useEffect(() => {
     if (activeTemplate) {
+      setTemplateName(activeTemplate.name || '');
+      setTemplateCategory(activeTemplate.category || 'Customizados');
+      setTemplateDescription(activeTemplate.description || '');
+
       const code = getRawTemplateSource(activeTemplate.id);
       setTsxCode(code);
       setTsxCompileError(null);
@@ -404,6 +397,25 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
     }, 400);
   };
 
+  // Atualiza metadados no estado e no código TSX
+  const handleUpdateTemplateMetadata = (
+    field: 'name' | 'category' | 'description',
+    value: string
+  ) => {
+    if (field === 'name') setTemplateName(value);
+    if (field === 'category') setTemplateCategory(value);
+    if (field === 'description') setTemplateDescription(value);
+
+    setTsxCode((prevCode) => {
+      const updated = updateMetadataInCode(prevCode, field, value);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = window.setTimeout(() => {
+        handleCompileCode(updated, false);
+      }, 300);
+      return updated;
+    });
+  };
+
   // Sincronização reativa com eventos de criação/exclusão de templates
   useEffect(() => {
     const handleTemplatesUpdated = () => {
@@ -413,9 +425,23 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
     return () => window.removeEventListener('crom:templates-updated', handleTemplatesUpdated);
   }, []);
 
-  // Salvar no Registry Local e persistir no localStorage
+  // Salvar no Catálogo Local e persistir no localStorage com props e código sincronizados
   const handleSaveToRegistry = () => {
-    const result = compileTsxTemplate(tsxCode);
+    // 1. Injeta os defaultProps modificados e metadados no código TSX
+    let codeWithProps = updateDefaultPropsInCode(tsxCode, currentProps);
+    if (templateName) {
+      codeWithProps = updateMetadataInCode(codeWithProps, 'name', templateName);
+    }
+    if (templateCategory) {
+      codeWithProps = updateMetadataInCode(codeWithProps, 'category', templateCategory);
+    }
+    if (templateDescription) {
+      codeWithProps = updateMetadataInCode(codeWithProps, 'description', templateDescription);
+    }
+    setTsxCode(codeWithProps);
+
+    // 2. Compila o template com o código sincronizado
+    const result = compileTsxTemplate(codeWithProps);
     if (result.error) {
       setTsxCompileError(result.error);
       alert(`Não foi possível salvar devido a erro no código:\n${result.error}`);
@@ -423,25 +449,43 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
     }
 
     if (result.template) {
-      saveCustomTemplate(result.template, tsxCode);
+      // 3. Atualiza explicitamente propriedades e metadados no objeto do template
+      if (templateName) result.template.name = templateName;
+      if (templateCategory) result.template.category = templateCategory as TemplateCategory;
+      if (templateDescription) result.template.description = templateDescription;
+      result.template.defaultProps = {
+        ...result.template.defaultProps,
+        ...currentProps,
+      };
+
+      // 4. Salva no localStorage e em memória no CARD_REGISTRY
+      saveCustomTemplate(result.template, codeWithProps);
       setTemplateListVersion((v) => v + 1);
       setSelectedTemplateId(result.template.id);
+      setIsCompiledCustom(true);
+      setCompiledTemplate(result.template);
+
       showToast(
-        `Template "${result.template.name}" [${result.template.id}] salvo no catálogo com sucesso!`
+        `Template "${result.template.name}" salvo no catálogo com suas modificações e props!`
       );
     }
   };
 
   // Salvar como Novo Template (Fork) persistente
   const handleForkNewTemplate = () => {
-    const customId = `custom-${Date.now().toString().slice(-4)}`;
-    const customName = `${activeTemplate?.name || 'Template'} Customizado`;
+    const timestamp = Date.now();
+    const customId = `custom-${timestamp.toString().slice(-6)}`;
+    const baseName = templateName || activeTemplate?.name || 'Template';
+    const newName = `${baseName} Customizado`;
+    const newCategory = templateCategory || activeTemplate?.category || 'Customizados';
 
-    // Atualiza o ID, nome e categoria no código TSX
+    // Atualiza o ID, nome, categoria e defaultProps no código TSX
     let updatedCode = tsxCode
       .replace(/id:\s*['"][^'"]+['"]/, `id: '${customId}'`)
-      .replace(/name:\s*['"][^'"]+['"]/, `name: '${customName}'`)
-      .replace(/category:\s*['"][^'"]+['"]/, `category: 'Customizados'`);
+      .replace(/name:\s*['"][^'"]+['"]/, `name: '${newName.replace(/'/g, "\\'")}'`)
+      .replace(/category:\s*['"][^'"]+['"]/, `category: '${newCategory}'`);
+
+    updatedCode = updateDefaultPropsInCode(updatedCode, currentProps);
 
     const result = compileTsxTemplate(updatedCode);
     if (result.error) {
@@ -451,11 +495,23 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
     }
 
     if (result.template) {
+      result.template.name = newName;
+      result.template.category = newCategory as TemplateCategory;
+      result.template.defaultProps = {
+        ...result.template.defaultProps,
+        ...currentProps,
+      };
+
       saveCustomTemplate(result.template, updatedCode);
       setTemplateListVersion((v) => v + 1);
       setSelectedTemplateId(result.template.id);
       setTsxCode(updatedCode);
-      showToast(`Novo template criado e salvo no catálogo: "${customName}" [${customId}]`);
+      setTemplateName(newName);
+      setTemplateCategory(newCategory);
+      setIsCompiledCustom(true);
+      setCompiledTemplate(result.template);
+
+      showToast(`Novo template criado e salvo no catálogo: "${newName}" [${customId}]`);
     } else {
       showToast('Erro ao criar template. Verifique a sintaxe.');
     }
@@ -597,6 +653,16 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
 
           <button
             type="button"
+            onClick={handleSaveToRegistry}
+            className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/30"
+            title="Salvar alterações e propriedades no Catálogo/Loja de Templates"
+          >
+            <Icons.Check />
+            <span>Salvar no Catálogo</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleDownloadTsx}
             className="px-2.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
             title="Baixar arquivo .tsx deste template"
@@ -635,6 +701,62 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
             </button>
           )}
         </div>
+      </div>
+
+      {/* Barra de Metadados Editáveis do Template (Nome, Categoria, Descrição) */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 sm:px-4 sm:py-3 shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex-1 min-w-[200px] flex items-center gap-2">
+          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+            Nome:
+          </label>
+          <input
+            type="text"
+            value={templateName}
+            onChange={(e) => handleUpdateTemplateMetadata('name', e.target.value)}
+            placeholder="Nome do Template"
+            className="bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-xs text-white font-medium w-full focus:outline-none"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 min-w-[180px]">
+          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+            Categoria:
+          </label>
+          <select
+            value={templateCategory}
+            onChange={(e) => handleUpdateTemplateMetadata('category', e.target.value)}
+            className="bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-xs text-white font-medium w-full focus:outline-none cursor-pointer"
+          >
+            {TEMPLATE_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex-1 min-w-[200px] hidden md:flex items-center gap-2">
+          <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+            Descrição:
+          </label>
+          <input
+            type="text"
+            value={templateDescription}
+            onChange={(e) => handleUpdateTemplateMetadata('description', e.target.value)}
+            placeholder="Breve descrição do template"
+            className="bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 w-full focus:outline-none"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSaveToRegistry}
+          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow shrink-0"
+          title="Salvar alterações no Catálogo"
+        >
+          <Icons.Check />
+          <span>Salvar no Catálogo</span>
+        </button>
       </div>
 
       {/* Notificação Toast */}
@@ -1000,6 +1122,22 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
           {/* ABA 2: Formulário Dinâmico de Props */}
           {activeTab === 'form' && (
             <div className="p-4 flex-1 overflow-y-auto space-y-3.5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800 gap-2 flex-wrap">
+                <span className="text-xs text-slate-400">
+                  Edite os campos abaixo. Ao clicar em{' '}
+                  <strong className="text-emerald-400">Salvar no Catálogo</strong>, suas modificações
+                  serão fixadas no catálogo.
+                </span>
+                <button
+                  type="button"
+                  onClick={handleSaveToRegistry}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow transition ml-auto"
+                  title="Salvar alterações no Catálogo"
+                >
+                  <Icons.Check />
+                  <span>Salvar no Catálogo</span>
+                </button>
+              </div>
               {effectiveTemplate?.schema?.map((field) => {
                 const val = currentProps[field.name];
 
@@ -1073,6 +1211,7 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
                         </button>
                       </div>
                       <textarea
+                        data-prop-name={field.name}
                         value={val ?? ''}
                         onChange={(e) => handlePropChange(field.name, e.target.value)}
                         rows={3}
@@ -1091,6 +1230,7 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
                       <span className="text-xs font-semibold text-slate-200">{field.label}</span>
                       <div className="flex items-center gap-2">
                         <input
+                          data-prop-name={field.name}
                           type="color"
                           value={val || '#6366f1'}
                           onChange={(e) => handlePropChange(field.name, e.target.value)}
@@ -1111,6 +1251,7 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
                         {field.label}
                       </label>
                       <select
+                        data-prop-name={field.name}
                         value={val || field.defaultValue}
                         onChange={(e) => handlePropChange(field.name, e.target.value)}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
@@ -1145,6 +1286,7 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
                       )}
                     </div>
                     <input
+                      data-prop-name={field.name}
                       type={field.type === 'number' ? 'number' : 'text'}
                       value={val ?? ''}
                       onChange={(e) =>
@@ -1166,11 +1308,22 @@ export const TemplateSandbox: React.FC<TemplateSandboxProps> = ({ onBackToStudio
           {/* ABA 3: Editor JSON */}
           {activeTab === 'json' && (
             <div className="flex flex-col flex-1 p-4 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-400">
+              <div className="flex items-center justify-between text-xs text-slate-400 gap-2 flex-wrap pb-1">
                 <span>Edição direta dos valores das propriedades do template:</span>
-                {jsonError && (
-                  <span className="text-rose-400 font-mono font-bold">{jsonError}</span>
-                )}
+                <div className="flex items-center gap-2 ml-auto">
+                  {jsonError && (
+                    <span className="text-rose-400 font-mono font-bold">{jsonError}</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSaveToRegistry}
+                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow transition"
+                    title="Salvar alterações no Catálogo"
+                  >
+                    <Icons.Check />
+                    <span>Salvar no Catálogo</span>
+                  </button>
+                </div>
               </div>
               <textarea
                 value={jsonText}

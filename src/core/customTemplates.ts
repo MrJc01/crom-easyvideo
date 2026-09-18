@@ -1,6 +1,6 @@
 import React from 'react';
 import { transform } from 'sucrase';
-import type { TemplateDefinition, FieldDefinition } from './types';
+import type { TemplateDefinition, FieldDefinition, TemplateCategory } from './types';
 import { CARD_REGISTRY, registerTemplate, getAllTemplates } from '../templates/registry';
 import { spring, interpolate } from './animations';
 import { Icons, TemplateIconMap } from './icons';
@@ -21,6 +21,155 @@ export interface StoredCustomTemplate {
 }
 
 const STORAGE_KEY = 'crom_custom_templates_v1';
+
+// Safe non-enumerable fallback polyfills on Object.prototype to prevent arbitrary custom templates calling .endsWith, .startsWith, .includes, .toLowerCase, etc. on non-strings from throwing TypeError
+try {
+  const safeStringDelegates = ['endsWith', 'startsWith', 'includes', 'toLowerCase', 'toUpperCase'];
+  for (const m of safeStringDelegates) {
+    if (typeof (Object.prototype as any)[m] !== 'function') {
+      Object.defineProperty(Object.prototype, m, {
+        value: function (...args: any[]) {
+          const target =
+            this && typeof this.url === 'string'
+              ? this.url
+              : this && typeof this.src === 'string'
+              ? this.src
+              : this && typeof this.toString === 'function' && this.toString() !== '[object Object]'
+              ? this.toString()
+              : '';
+          return typeof (String.prototype as any)[m] === 'function'
+            ? (String.prototype as any)[m].apply(target, args)
+            : false;
+        },
+        configurable: true,
+        enumerable: false,
+        writable: true,
+      });
+    }
+  }
+} catch (e) {
+  console.warn('Fallback string methods setup error:', e);
+}
+
+/**
+ * Converte um objeto de mídia em um objeto totalmente interoperável com métodos de string.
+ */
+export function makeStringCompatibleObject(obj: any): any {
+  if (!obj || typeof obj !== 'object') return obj;
+
+  const urlStr =
+    typeof obj.url === 'string'
+      ? obj.url
+      : typeof obj.src === 'string'
+      ? obj.src
+      : '';
+
+  const stringMethods = [
+    'endsWith',
+    'startsWith',
+    'includes',
+    'indexOf',
+    'lastIndexOf',
+    'toLowerCase',
+    'toUpperCase',
+    'trim',
+    'slice',
+    'substring',
+    'substr',
+    'split',
+    'replace',
+    'replaceAll',
+    'match',
+    'search',
+    'charAt',
+    'charCodeAt',
+    'concat',
+  ];
+
+  for (const method of stringMethods) {
+    if (typeof (String.prototype as any)[method] === 'function' && typeof obj[method] !== 'function') {
+      try {
+        Object.defineProperty(obj, method, {
+          value: function (...args: any[]) {
+            const target =
+              typeof this.url === 'string'
+                ? this.url
+                : typeof this.src === 'string'
+                ? this.src
+                : urlStr;
+            return (String.prototype as any)[method].apply(target, args);
+          },
+          configurable: true,
+          enumerable: false,
+          writable: true,
+        });
+      } catch {}
+    }
+  }
+
+  try {
+    Object.defineProperty(obj, 'toString', {
+      value: function () {
+        return typeof this.url === 'string' ? this.url : typeof this.src === 'string' ? this.src : urlStr;
+      },
+      configurable: true,
+      enumerable: false,
+      writable: true,
+    });
+    Object.defineProperty(obj, 'valueOf', {
+      value: function () {
+        return typeof this.url === 'string' ? this.url : typeof this.src === 'string' ? this.src : urlStr;
+      },
+      configurable: true,
+      enumerable: false,
+      writable: true,
+    });
+    if (typeof Symbol !== 'undefined' && Symbol.toPrimitive) {
+      Object.defineProperty(obj, Symbol.toPrimitive, {
+        value: function () {
+          return typeof this.url === 'string' ? this.url : typeof this.src === 'string' ? this.src : urlStr;
+        },
+        configurable: true,
+        enumerable: false,
+        writable: true,
+      });
+    }
+    if (!('length' in obj)) {
+      Object.defineProperty(obj, 'length', {
+        get: function () {
+          const s = typeof this.url === 'string' ? this.url : typeof this.src === 'string' ? this.src : urlStr;
+          return s.length;
+        },
+        configurable: true,
+        enumerable: false,
+      });
+    }
+  } catch {}
+
+  return obj;
+}
+
+/**
+ * Percorre recursivamente todas as propriedades de um objeto de props para garantir que
+ * qualquer objeto que represente mídia ou array de itens funcione tanto como objeto quanto como string.
+ */
+export function deeplySanitizeMediaProps(val: any): any {
+  if (!val) return val;
+  if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
+    return val;
+  }
+  if (Array.isArray(val)) {
+    return val.map((item) => deeplySanitizeMediaProps(item));
+  }
+  if (typeof val === 'object') {
+    makeStringCompatibleObject(val);
+    for (const [k, v] of Object.entries(val)) {
+      val[k] = deeplySanitizeMediaProps(v);
+    }
+    return val;
+  }
+  return val;
+}
 
 /**
  * Compila e avalia código TSX dinamicamente em runtime no navegador via Sucrase.
@@ -180,6 +329,16 @@ export function compileTsxTemplate(tsxCode: string): {
       };
     }
 
+    // Envolve o componente com sanitizador transparente de props e mídia
+    const rawComponent = found.Component;
+    found.Component = (renderProps: any) => {
+      const sanitized = deeplySanitizeMediaProps(renderProps?.props ? { ...renderProps.props } : {});
+      return rawComponent({
+        ...renderProps,
+        props: sanitized,
+      });
+    };
+
     return { template: found as TemplateDefinition };
   } catch (err: unknown) {
     return {
@@ -287,6 +446,15 @@ export function initCustomTemplatesFromStorage(): void {
     if (item.tsxCode) {
       const result = compileTsxTemplate(item.tsxCode);
       if (result.template) {
+        if (item.defaultProps) {
+          result.template.defaultProps = {
+            ...result.template.defaultProps,
+            ...item.defaultProps,
+          };
+        }
+        if (item.name) result.template.name = item.name;
+        if (item.category) result.template.category = item.category as TemplateCategory;
+        if (item.description) result.template.description = item.description;
         registerTemplate(result.template);
         count++;
       }

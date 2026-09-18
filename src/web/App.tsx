@@ -63,6 +63,10 @@ export default function App() {
     activeCard,
   });
 
+  useEffect(() => {
+    (window as any).__CROM_PROJECT__ = project;
+  }, [project]);
+
   const handleUpdateCard = (updated: VideoCard) => {
     setProject((prev) => ({
       ...prev,
@@ -131,6 +135,9 @@ export default function App() {
     }));
     setSelectedCardId(newCard.id);
     handleSeek(totalFrames);
+    if (currentView !== 'studio' && currentView !== 'cards') {
+      setCurrentView('studio');
+    }
   };
 
   return (
